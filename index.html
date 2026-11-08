@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legasaur — Database Fantacalcio</title>
+<style>
+:root {
+  --bg: #0f1923;
+  --bg2: #182633;
+  --bg3: #1e3044;
+  --accent: #00e676;
+  --accent2: #00bfa5;
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+  --text: #e0e6ed;
+  --text2: #8899aa;
+  --danger: #ff5252;
+  --border: #2a3f52;
+  --radius: 10px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+/* Header */
+.hero {
+  background: linear-gradient(135deg, #0d253f 0%, #1a4a2e 50%, #0d253f 100%);
+  padding: 3rem 1rem 2rem;
+  text-align: center;
+  border-bottom: 3px solid var(--accent);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(0,230,118,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 70% 50%, rgba(0,191,165,0.08) 0%, transparent 50%);
+}
+.hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--gold), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+.hero p {
+  color: var(--text2);
+  font-size: 1rem;
+  margin-top: .5rem;
+  position: relative;
+}
+/* Nav */
+nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+nav .nav-inner {
+  display: flex;
+  gap: 0;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+nav button {
+  background: none;
+  border: none;
+  color: var(--text2);
+  padding: .9rem 1.2rem;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all .2s;
+  white-space: nowrap;
+}
+nav button:hover { color: var(--text); }
+nav button.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+/* Main */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+.section { display: none; }
+.section.active { display: block; }
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.section-title .icon { font-size: 1.3rem; }
+/* Season selector */
+.season-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-bottom: 1.5rem;
+}
+.season-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: .45rem .9rem;
+  border-radius: 20px;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.season-btn:hover { border-color: var(--accent); color: var(--text); }
+.season-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+th {
+  background: var(--bg3);
+  padding: .7rem .6rem;
+  text-align: left;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text2);
+  border-bottom: 2px solid var(--border);
+}
+td {
+  padding: .6rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .88rem;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(0,230,118,0.04); }
+.pos-cell {
+  font-weight: 800;
+  width: 2.5rem;
+  text-align: center;
+}
+.pos-1 { color: var(--gold); }
+.pos-2 { color: var(--silver); }
+.pos-3 { color: var(--bronze); }
+.team-cell {
+  font-weight: 600;
+  min-width: 150px;
+}
+.num-cell { text-align: center; font-variant-numeric: tabular-nums; }
+.verdict-cell {
+  font-size: .78rem;
+  color: var(--accent);
+  font-weight: 600;
+  max-width: 200px;
+}
+.verdict-retro { color: var(--danger); }
+/* Cards */
+.trophy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.trophy-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  transition: transform .2s, border-color .2s;
+}
+.trophy-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+.trophy-card .season {
+  font-size: .82rem;
+  color: var(--text2);
+  margin-bottom: .6rem;
+  font-weight: 600;
+}
+.trophy-card .winner {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: .3rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.trophy-line {
+  font-size: .82rem;
+  color: var(--text2);
+  padding: .2rem 0;
+  display: flex;
+  gap: .5rem;
+}
+.trophy-line .label { color: var(--text2); min-width: 120px; }
+.trophy-line .val { color: var(--text); font-weight: 600; }
+/* Storico bar */
+.storico-bar {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.storico-bar:last-child { border-bottom: none; }
+.storico-team { width: 180px; font-weight: 600; font-size: .88rem; }
+.storico-visual {
+  flex: 1;
+  display: flex;
+  gap: 2px;
+  height: 26px;
+  align-items: center;
+}
+.storico-segment {
+  height: 100%;
+  border-radius: 3px;
+  min-width: 0;
+  transition: width .5s ease;
+}
+.storico-total {
+  font-weight: 800;
+  font-size: 1rem;
+  min-width: 2rem;
+  text-align: right;
+}
+/* Rose */
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.roster-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.roster-header {
+  background: linear-gradient(135deg, var(--bg3), #1a3a2a);
+  padding: .8rem 1rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 2px solid var(--accent);
+}
+.roster-table { width: 100%; }
+.roster-table td { padding: .35rem .5rem; font-size: .82rem; }
+.roster-table .role-badge {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 22px;
+  font-size: .7rem;
+  font-weight: 800;
+  color: #fff;
+}
+.role-P { background: #f57c00; }
+.role-D { background: #1976d2; }
+.role-C { background: #388e3c; }
+.role-A { background: #d32f2f; }
+.roster-table .player-name { font-weight: 600; }
+.roster-table .cost { color: var(--gold); font-weight: 700; text-align: right; }
+/* Stats overview */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  text-align: center;
+}
+.stat-card .stat-val {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.stat-card .stat-label {
+  font-size: .82rem;
+  color: var(--text2);
+  margin-top: .3rem;
+}
+/* Responsive */
+@media (max-width: 600px) {
+  .hero h1 { font-size: 1.8rem; letter-spacing: 2px; }
+  nav button { padding: .7rem .8rem; font-size: .8rem; }
+  .trophy-grid { grid-template-columns: 1fr; }
+  .roster-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  table { font-size: .8rem; }
+  th, td { padding: .4rem .3rem; }
+  .storico-team { width: 110px; font-size: .78rem; }
+}
+/* Team selector for rose */
+.team-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  margin-bottom: 1rem;
+}
+.team-tab {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: .4rem .7rem;
+  border-radius: 6px;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.team-tab:hover { border-color: var(--accent); }
+.team-tab.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.search-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .6rem 1rem;
+  color: var(--text);
+  font-size: .88rem;
+  width: 100%;
+  max-width: 350px;
+  margin-bottom: 1rem;
+  outline: none;
+}
+.search-box:focus { border-color: var(--accent); }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>LEGASAUR</h1>
+  <p>Database Fantacalcio — Dal 2016 ad oggi</p>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <button class="active" onclick="showSection('home')">Home</button>
+    <button onclick="showSection('classifiche')">Classifiche</button>
+    <button onclick="showSection('albo')">Albo d'Oro</button>
+    <button onclick="showSection('storico')">Storico Trofei</button>
+    <button onclick="showSection('rose')">Rose</button>
+  </div>
+</nav>
+
+<main>
+  <!-- HOME -->
+  <div id="sec-home" class="section active">
+    <div class="stats-grid" id="stats-overview"></div>
+    <h2 class="section-title"><span class="icon">&#127942;</span> Ultima Stagione — 2025/2026</h2>
+    <div id="home-classifica"></div>
+    <h2 class="section-title" style="margin-top:2rem"><span class="icon">&#127941;</span> Albo d'Oro Recente</h2>
+    <div id="home-albo"></div>
+  </div>
+
+  <!-- CLASSIFICHE -->
+  <div id="sec-classifiche" class="section">
+    <h2 class="section-title"><span class="icon">&#128200;</span> Classifiche</h2>
+    <div class="season-selector" id="cls-seasons"></div>
+    <div id="cls-table"></div>
+  </div>
+
+  <!-- ALBO D'ORO -->
+  <div id="sec-albo" class="section">
+    <h2 class="section-title"><span class="icon">&#127942;</span> Albo d'Oro</h2>
+    <div class="trophy-grid" id="albo-grid"></div>
+  </div>
+
+  <!-- STORICO -->
+  <div id="sec-storico" class="section">
+    <h2 class="section-title"><span class="icon">&#127941;</span> Storico Trofei</h2>
+    <div id="storico-content"></div>
+  </div>
+
+  <!-- ROSE -->
+  <div id="sec-rose" class="section">
+    <h2 class="section-title"><span class="icon">&#9917;</span> Rose</h2>
+    <div class="season-selector" id="rose-seasons"></div>
+    <input type="text" class="search-box" id="rose-search" placeholder="Cerca giocatore..." oninput="filterRose()">
+    <div class="team-tabs" id="rose-teams"></div>
+    <div class="roster-grid" id="rose-content"></div>
+  </div>
+</main>
+
+<script>
+const DATA = {"classifiche": {"2016/2017": [{"pos": 1, "team": "Poggibonsi", "pt": 61.0, "g": 35.0, "v": 18.0, "n": 7.0, "p": 10.0, "gf": 76.0, "gs": 65.0, "dr": 11.0, "totale": 2538.5, "verdict": "Campione d'Italia / €"}, {"pos": 2, "team": "Vladigrado", "pt": 60.0, "g": 35.0, "v": 18.0, "n": 6.0, "p": 11.0, "gf": 115.0, "gs": 82.0, "dr": 33.0, "totale": 2684.0, "verdict": "Secondo classificato / €"}, {"pos": 3, "team": "Lino Banfield", "pt": 52.0, "g": 35.0, "v": 14.0, "n": 10.0, "p": 11.0, "gf": 65.0, "gs": 70.0, "dr": -5.0, "totale": 2463.5, "verdict": "Terzo classificato / €"}, {"pos": 4, "team": "Vasilis Unitis", "pt": 52.0, "g": 35.0, "v": 14.0, "n": 10.0, "p": 11.0, "gf": 59.0, "gs": 59.0, "dr": 0.0, "totale": 2449.5}, {"pos": 5, "team": "Polisportiva Calitri", "pt": 42.0, "g": 35.0, "v": 13.0, "n": 3.0, "p": 19.0, "gf": 68.0, "gs": 82.0, "dr": -14.0, "totale": 2489.0}, {"pos": 6, "team": "Team Onto", "pt": 41.0, "g": 35.0, "v": 10.0, "n": 11.0, "p": 14.0, "gf": 71.0, "gs": 73.0, "dr": -2.0, "totale": 2502.0}, {"pos": 7, "team": "Boca Figa", "pt": 40.0, "g": 35.0, "v": 9.0, "n": 13.0, "p": 13.0, "gf": 62.0, "gs": 69.0, "dr": -7.0, "totale": 2454.5}, {"pos": 8, "team": "Vis Anto", "pt": 40.0, "g": 35.0, "v": 12.0, "n": 4.0, "p": 19.0, "gf": 45.0, "gs": 61.0, "dr": -16.0, "totale": 2390.0, "verdict": "Ultimo classificato"}], "2017/2018": [{"pos": 1, "team": "Poggibonsi", "pt": 61.0, "g": 35.0, "v": 18.0, "n": 7.0, "p": 10.0, "gf": 88.0, "gs": 56.0, "dr": 32.0, "totale": 2580.5, "verdict": "Campione d'Italia / €"}, {"pos": 2, "team": "Polisportiva Calitri", "pt": 61.0, "g": 35.0, "v": 19.0, "n": 4.0, "p": 12.0, "gf": 73.0, "gs": 62.0, "dr": 11.0, "totale": 2512.0, "verdict": "Secondo classificato / €"}, {"pos": 3, "team": "Boca Figa", "pt": 57.0, "g": 35.0, "v": 15.0, "n": 12.0, "p": 8.0, "gf": 88.0, "gs": 64.0, "dr": 24.0, "totale": 2577.0, "verdict": "Terzo classificato / €"}, {"pos": 4, "team": "Lino Banfield", "pt": 49.0, "g": 35.0, "v": 14.0, "n": 7.0, "p": 14.0, "gf": 69.0, "gs": 78.0, "dr": -9.0, "totale": 2491.5}, {"pos": 5, "team": "Vladigrado", "pt": 46.0, "g": 35.0, "v": 13.0, "n": 7.0, "p": 15.0, "gf": 62.0, "gs": 54.0, "dr": 8.0, "totale": 2452.0}, {"pos": 6, "team": "Vasilis Unitis", "pt": 44.0, "g": 35.0, "v": 13.0, "n": 5.0, "p": 17.0, "gf": 66.0, "gs": 90.0, "dr": -24.0, "totale": 2473.0}, {"pos": 7, "team": "Team Onto", "pt": 42.0, "g": 35.0, "v": 12.0, "n": 6.0, "p": 17.0, "gf": 49.0, "gs": 65.0, "dr": -16.0, "totale": 2400.0}, {"pos": 8, "team": "SC Oreggio", "pt": 34.0, "g": 35.0, "v": 10.0, "n": 4.0, "p": 21.0, "gf": 54.0, "gs": 80.0, "dr": -26.0, "totale": 2434.0, "verdict": "Ultimo classificato"}], "2018/2019": [{"pos": 1, "team": "Lino Banfield", "pt": 67.0, "g": 35.0, "v": 21.0, "n": 4.0, "p": 10.0, "gf": 84.0, "gs": 61.0, "dr": 23.0, "pt_totali": 2565.0, "verdict": "Campione d'Italia / €"}, {"pos": 2, "team": "Polisportiva Calitri", "pt": 54.0, "g": 35.0, "v": 16.0, "n": 6.0, "p": 13.0, "gf": 82.0, "gs": 80.0, "dr": 2.0, "pt_totali": 2541.5, "verdict": "Secondo classificato / €"}, {"pos": 3, "team": "Vladigrado", "pt": 53.0, "g": 35.0, "v": 15.0, "n": 8.0, "p": 12.0, "gf": 77.0, "gs": 60.0, "dr": 17.0, "pt_totali": 2527.5, "verdict": "Terzo classificato / €"}, {"pos": 4, "team": "Boca Figa", "pt": 49.0, "g": 35.0, "v": 14.0, "n": 7.0, "p": 14.0, "gf": 72.0, "gs": 68.0, "dr": 4.0, "pt_totali": 2500.0}, {"pos": 5, "team": "Poggibonsi", "pt": 48.0, "g": 35.0, "v": 14.0, "n": 6.0, "p": 15.0, "gf": 60.0, "gs": 74.0, "dr": -14.0, "pt_totali": 2452.5}, {"pos": 6, "team": "SC Oreggio", "pt": 47.0, "g": 35.0, "v": 13.0, "n": 8.0, "p": 14.0, "gf": 52.0, "gs": 50.0, "dr": 2.0, "pt_totali": 2428.0}, {"pos": 7, "team": "Vasilis Unitis", "pt": 39.0, "g": 35.0, "v": 11.0, "n": 6.0, "p": 18.0, "gf": 57.0, "gs": 68.0, "dr": -11.0, "pt_totali": 2433.0}, {"pos": 8, "team": "Team Onto", "pt": 37.0, "g": 35.0, "v": 10.0, "n": 7.0, "p": 18.0, "gf": 53.0, "gs": 76.0, "dr": -23.0, "pt_totali": 2387.0, "verdict": "Ultimo classificato"}], "2019/2020": [{"pos": 1, "team": "Vladigrado", "pt": 61.0, "g": 35.0, "verdict": "Campione d'Italia / €"}, {"pos": 2, "team": "Boca Figa", "pt": 57.0, "g": 35.0, "verdict": "Secondo classificato / €"}, {"pos": 3, "team": "Polisportiva Calitri", "pt": 53.0, "g": 35.0, "verdict": "Terzo classificato / €"}, {"pos": 4, "team": "Poggibonsi", "pt": 51.0, "g": 35.0}, {"pos": 5, "team": "Colleferro", "pt": 49.0, "g": 35.0}, {"pos": 6, "team": "Team Onto", "pt": 48.0, "g": 35.0}, {"pos": 7, "team": "SC Oreggio", "pt": 44.0, "g": 35.0}, {"pos": 8, "team": "Vasilis Unitis", "pt": 37.0, "g": 35.0, "verdict": "Ultimo classificato"}], "2021/2022": [{"pos": 1, "team": "Boca Figa", "pt": 68.0, "g": 35.0, "v": 21.0, "n": 5.0, "p": 9.0, "gf": 77.0, "gs": 54.0, "dr": 23.0, "pt_totali": 2536.0}, {"pos": 2, "team": "Amario Lucano", "pt": 55.0, "g": 35.0, "v": 16.0, "n": 7.0, "p": 12.0, "gf": 82.0, "gs": 65.0, "dr": 17.0, "pt_totali": 2558.5}, {"pos": 3, "team": "Vladigrado", "pt": 54.0, "g": 35.0, "v": 17.0, "n": 3.0, "p": 15.0, "gf": 81.0, "gs": 76.0, "dr": 5.0, "pt_totali": 2545.0}, {"pos": 4, "team": "SC Oreggio", "pt": 48.0, "g": 35.0, "v": 14.0, "n": 6.0, "p": 15.0, "gf": 75.0, "gs": 80.0, "dr": -5.0, "pt_totali": 2538.5}, {"pos": 5, "team": "So Lille", "pt": 47.0, "g": 35.0, "v": 12.0, "n": 11.0, "p": 12.0, "gf": 73.0, "gs": 65.0, "dr": 8.0, "pt_totali": 2526.5}, {"pos": 6, "team": "Politehnica Gyasi", "pt": 45.0, "g": 35.0, "v": 13.0, "n": 6.0, "p": 16.0, "gf": 63.0, "gs": 76.0, "dr": -13.0, "pt_totali": 2463.5}, {"pos": 7, "team": "Schiava Praha", "pt": 44.0, "g": 35.0, "v": 13.0, "n": 5.0, "p": 17.0, "gf": 55.0, "gs": 65.0, "dr": -10.0, "pt_totali": 2431.5}, {"pos": 8, "team": "Team Onto", "pt": 34.0, "g": 35.0, "v": 9.0, "n": 7.0, "p": 19.0, "gf": 60.0, "gs": 85.0, "dr": -25.0, "pt_totali": 2456.5}], "2022/2023": [{"pos": 1, "team": "So Lille", "pt": 62.0, "g": 35.0, "v": 19.0, "n": 5.0, "p": 11.0, "gf": 64.0, "gs": 54.0, "dr": 10.0, "pt_totali": 2485.0}, {"pos": 2, "team": "Team Onto", "pt": 60.0, "g": 35.0, "v": 17.0, "n": 9.0, "p": 9.0, "gf": 80.0, "gs": 54.0, "dr": 26.0, "pt_totali": 2525.5}, {"pos": 3, "team": "Polisportiva Calitri", "pt": 59.0, "g": 35.0, "v": 18.0, "n": 5.0, "p": 12.0, "gf": 82.0, "gs": 58.0, "dr": 24.0, "pt_totali": 2550.0}, {"pos": 4, "team": "SC Oreggio", "pt": 49.0, "g": 35.0, "v": 13.0, "n": 10.0, "p": 12.0, "gf": 55.0, "gs": 67.0, "dr": -12.0, "pt_totali": 2421.5}, {"pos": 5, "team": "Boca Figa", "pt": 47.0, "g": 35.0, "v": 12.0, "n": 11.0, "p": 12.0, "gf": 76.0, "gs": 75.0, "dr": 1.0, "pt_totali": 2536.5}, {"pos": 6, "team": "Schiava Praha", "pt": 46.0, "g": 35.0, "v": 12.0, "n": 10.0, "p": 13.0, "gf": 67.0, "gs": 65.0, "dr": 2.0, "pt_totali": 2498.5}, {"pos": 7, "team": "Politehnica Gyasi", "pt": 38.0, "g": 35.0, "v": 12.0, "n": 2.0, "p": 21.0, "gf": 49.0, "gs": 67.0, "dr": -18.0, "pt_totali": 2430.0}, {"pos": 8, "team": "Amario Lucano", "pt": 31.0, "g": 35.0, "v": 9.0, "n": 4.0, "p": 22.0, "gf": 49.0, "gs": 82.0, "dr": -33.0, "pt_totali": 2400.0}], "2023/2024": [{"pos": 1, "team": "So Lille", "pt": 67.0, "g": 35.0, "v": 20.0, "n": 7.0, "p": 8.0, "gf": 86.0, "gs": 61.0, "dr": 25.0, "pt_totali": 2568.5}, {"pos": 2, "team": "Schiava Praha", "pt": 62.0, "g": 35.0, "v": 18.0, "n": 8.0, "p": 9.0, "gf": 84.0, "gs": 61.0, "dr": 23.0, "pt_totali": 2573.5}, {"pos": 3, "team": "Polisportiva Calitri", "pt": 57.0, "g": 35.0, "v": 17.0, "n": 6.0, "p": 12.0, "gf": 79.0, "gs": 60.0, "dr": 19.0, "pt_totali": 2534.5}, {"pos": 4, "team": "Team Onto", "pt": 55.0, "g": 35.0, "v": 16.0, "n": 7.0, "p": 12.0, "gf": 87.0, "gs": 80.0, "dr": 7.0, "pt_totali": 2568.5}, {"pos": 5, "team": "Inceltic", "pt": 42.0, "g": 35.0, "v": 11.0, "n": 9.0, "p": 15.0, "gf": 71.0, "gs": 81.0, "dr": -10.0, "pt_totali": 2518.5}, {"pos": 6, "team": "Boca Figa", "pt": 38.0, "g": 35.0, "v": 10.0, "n": 8.0, "p": 17.0, "gf": 58.0, "gs": 80.0, "dr": -22.0, "pt_totali": 2407.5}, {"pos": 7, "team": "Vladigrado", "pt": 35.0, "g": 35.0, "v": 8.0, "n": 11.0, "p": 16.0, "gf": 56.0, "gs": 75.0, "dr": -19.0, "pt_totali": 2405.5}, {"pos": 8, "team": "Osteopatia Baldazzi", "pt": 33.0, "g": 35.0, "v": 9.0, "n": 6.0, "p": 20.0, "gf": 61.0, "gs": 84.0, "dr": -23.0, "pt_totali": 2473.0}], "2024/2025": [{"pos": 1, "team": "InCeltic", "pt": 68.0, "g": 35.0, "v": 21.0, "n": 5.0, "p": 9.0, "gf": 89.0, "gs": 71.0, "dr": 18.0, "pt_totali": 2583.0}, {"pos": 2, "team": "Schiava Praha", "pt": 66.0, "g": 35.0, "v": 20.0, "n": 6.0, "p": 9.0, "gf": 98.0, "gs": 65.0, "dr": 33.0, "pt_totali": 2615.5}, {"pos": 3, "team": "Polisportiva Calitri", "pt": 63.0, "g": 35.0, "v": 20.0, "n": 3.0, "p": 12.0, "gf": 94.0, "gs": 77.0, "dr": 17.0, "pt_totali": 2612.0}, {"pos": 4, "team": "AC Spiaze", "pt": 51.0, "g": 35.0, "v": 14.0, "n": 9.0, "p": 12.0, "gf": 75.0, "gs": 69.0, "dr": 6.0, "pt_totali": 2507.0}, {"pos": 5, "team": "So Lille", "pt": 44.0, "g": 35.0, "v": 12.0, "n": 8.0, "p": 15.0, "gf": 75.0, "gs": 76.0, "dr": -1.0, "pt_totali": 2524.0}, {"pos": 6, "team": "Al Khmer", "pt": 40.0, "g": 35.0, "v": 11.0, "n": 7.0, "p": 17.0, "gf": 73.0, "gs": 78.0, "dr": -5.0, "pt_totali": 2520.0}, {"pos": 7, "team": "Lino Banfield", "pt": 36.0, "g": 35.0, "v": 10.0, "n": 6.0, "p": 19.0, "gf": 49.0, "gs": 82.0, "dr": -33.0, "pt_totali": 2398.5}, {"pos": 8, "team": "Team Onto", "pt": 25.0, "g": 35.0, "v": 7.0, "n": 6.0, "p": 22.0, "gf": 49.0, "gs": 84.0, "dr": -35.0, "pt_totali": 2414.5}], "2025/2026": [{"pos": 1, "team": "Polisportiva Calitri", "pt": 61.0, "g": 35.0, "v": 19.0, "n": 4.0, "p": 12.0, "gf": 95.0, "gs": 68.0, "dr": 27.0, "pt_totali": 2614.5}, {"pos": 2, "team": "São APAwlo F.C.", "pt": 61.0, "g": 35.0, "v": 19.0, "n": 4.0, "p": 12.0, "gf": 70.0, "gs": 74.0, "dr": -4.0, "pt_totali": 2501.5}, {"pos": 3, "team": "Schiava Praha", "pt": 54.0, "g": 35.0, "v": 16.0, "n": 6.0, "p": 13.0, "gf": 71.0, "gs": 57.0, "dr": 14.0, "pt_totali": 2492.5}, {"pos": 4, "team": "Lino Banfield", "pt": 52.0, "g": 35.0, "v": 15.0, "n": 7.0, "p": 13.0, "gf": 85.0, "gs": 82.0, "dr": 3.0, "pt_totali": 2568.5}, {"pos": 5, "team": "Team Onto", "pt": 48.0, "g": 35.0, "v": 13.0, "n": 9.0, "p": 13.0, "gf": 74.0, "gs": 75.0, "dr": -1.0, "pt_totali": 2524.0}, {"pos": 6, "team": "BaldaZZers", "pt": 47.0, "g": 35.0, "v": 14.0, "n": 5.0, "p": 16.0, "gf": 68.0, "gs": 74.0, "dr": -6.0, "pt_totali": 2494.0}, {"pos": 7, "team": "Boca Figa", "pt": 36.0, "g": 35.0, "v": 9.0, "n": 9.0, "p": 17.0, "gf": 60.0, "gs": 73.0, "dr": -13.0, "pt_totali": 2470.5}, {"pos": 8, "team": "InCeltic", "pt": 35.0, "g": 35.0, "v": 9.0, "n": 8.0, "p": 18.0, "gf": 53.0, "gs": 73.0, "dr": -20.0, "pt_totali": 2416.0}]}, "rose": {"2016/2017": {"Boca Figa": [{"r": "P", "n": "CONSIGLI", "s": "SAS", "c": 24.0}, {"r": "P", "n": "MIRANTE", "s": "BOL", "c": 9.0}, {"r": "P", "n": "PEGOLO", "s": "SAS", "c": 1.0}, {"r": "D", "n": "BONUCCI", "s": "JUV", "c": 33.0}, {"r": "D", "n": "ASTORI", "s": "FIO", "c": 9.0}, {"r": "D", "n": "ZAMPANO F", "s": "PES", "c": 8.0}, {"r": "D", "n": "RODRIGUEZ GO", "s": "FIO", "c": 32.0}, {"r": "D", "n": "SPOLLI", "s": "CHI", "c": 3.0}, {"r": "D", "n": "RUGANI", "s": "JUV", "c": 6.0}, {"r": "D", "n": "SALCEDO", "s": "FIO", "c": 5.0}, {"r": "D", "n": "ANIBAL", "s": "GEN", "c": 1.0}, {"r": "C", "n": "MERTENS", "s": "NAP", "c": 42.0}, {"r": "C", "n": "BIRSA", "s": "CHI", "c": 0.0}, {"r": "C", "n": "CASTRO", "s": "CHI", "c": 16.0}, {"r": "C", "n": "FREULER", "s": "ATA", "c": 13.0}, {"r": "C", "n": "PELLEGRINI", "s": "SAS", "c": 33.0}, {"r": "C", "n": "JOAO PEDRO", "s": "CAG", "c": 14.0}, {"r": "C", "n": "BIGLIA", "s": "LAZ", "c": 11.0}, {"r": "C", "n": "KASTANOS", "s": "PES", "c": 1.0}, {"r": "A", "n": "CALLEJON", "s": "NAP", "c": 1.0}, {"r": "A", "n": "ZAPATA D", "s": "UDI", "c": 0.0}, {"r": "A", "n": "PETAGNA", "s": "ATA", "c": 16.0}, {"r": "A", "n": "BERARDI", "s": "SAS", "c": 56.0}, {"r": "A", "n": "CHIESA", "s": "FIO", "c": 4.0}, {"r": "A", "n": "VALENCIA", "s": "BOL", "c": 1.0}], "Vasilis Unitis": [{"r": "P", "n": "BERISHA", "s": "ATA", "c": 1.0}, {"r": "P", "n": "RAFAEL", "s": "CAG", "c": 7.0}, {"r": "P", "n": "GABRIEL", "s": "CAG", "c": 1.0}, {"r": "D", "n": "CALDARA", "s": "ATA", "c": 12.0}, {"r": "D", "n": "ZAPPACOSTA", "s": "TOR", "c": 10.0}, {"r": "D", "n": "MANOLAS", "s": "ROM", "c": 18.0}, {"r": "D", "n": "BASTA", "s": "LAZ", "c": 13.0}, {"r": "D", "n": "CHIELLINI", "s": "JUV", "c": 17.0}, {"r": "D", "n": "RUDIGER", "s": "ROM", "c": 10.0}, {"r": "D", "n": "BURDISSO", "s": "GEN", "c": 6.0}, {"r": "D", "n": "TOROSIDIS", "s": "BOL", "c": 4.0}, {"r": "C", "n": "NAINGGOLAN", "s": "ROM", "c": 36.0}, {"r": "C", "n": "STROOTMAN", "s": "ROM", "c": 26.0}, {"r": "C", "n": "DE ROSSI", "s": "ROM", "c": 10.0}, {"r": "C", "n": "KURTIC", "s": "ATA", "c": 33.0}, {"r": "C", "n": "TELLO C", "s": "FIO", "c": 13.0}, {"r": "C", "n": "PAREDES", "s": "ROM", "c": 21.0}, {"r": "C", "n": "MARCHISIO", "s": "JUV", "c": 13.0}, {"r": "C", "n": "LOCATELLI M", "s": "MIL", "c": 7.0}, {"r": "A", "n": "MANDZUKIC", "s": "JUV", "c": 25.0}, {"r": "A", "n": "BACCA", "s": "MIL", "c": 73.0}, {"r": "A", "n": "DEULOFEU", "s": "MIL", "c": 14.0}, {"r": "A", "n": "THEREAU", "s": "UDI", "c": 19.0}, {"r": "A", "n": "OCAMPOS", "s": "MIL", "c": 0.0}, {"r": "A", "n": "TOTTI", "s": "ROM", "c": 13.0}], "Team Onto": [{"r": "P", "n": "DONNARUMMA G", "s": "MIL", "c": 18.0}, {"r": "P", "n": "SZCZESNY", "s": "ROM", "c": 19.0}, {"r": "P", "n": "ALISSON", "s": "ROM", "c": 0.0}, {"r": "D", "n": "KOULIBALY", "s": "NAP", "c": 16.0}, {"r": "D", "n": "FAZIO", "s": "ROM", "c": 9.0}, {"r": "D", "n": "GHOULAM", "s": "NAP", "c": 17.0}, {"r": "D", "n": "ALBIOL", "s": "NAP", "c": 7.0}, {"r": "D", "n": "MORETTI", "s": "TOR", "c": 7.0}, {"r": "D", "n": "CASTAN", "s": "TOR", "c": 6.0}, {"r": "D", "n": "CEPPITELLI", "s": "CAG", "c": 0.0}, {"r": "D", "n": "STENDARDO", "s": "PES", "c": 3.0}, {"r": "C", "n": "SUSO", "s": "MIL", "c": 25.0}, {"r": "C", "n": "BASELLI", "s": "TOR", "c": 0.0}, {"r": "C", "n": "CUADRADO", "s": "JUV", "c": 20.0}, {"r": "C", "n": "BROZOVIC", "s": "INT", "c": 14.0}, {"r": "C", "n": "KUCKA", "s": "MIL", "c": 11.0}, {"r": "C", "n": "VIVIANI", "s": "BOL", "c": 9.0}, {"r": "C", "n": "OBI", "s": "TOR", "c": 7.0}, {"r": "C", "n": "PICCHI", "s": "EMP", "c": 1.0}, {"r": "A", "n": "IMMOBILE", "s": "LAZ", "c": 50.0}, {"r": "A", "n": "SALAH", "s": "ROM", "c": 69.0}, {"r": "A", "n": "BORRIELLO", "s": "CAG", "c": 50.0}, {"r": "A", "n": "EL SHAARAWY", "s": "ROM", "c": 23.0}, {"r": "A", "n": "FARIAS", "s": "CAG", "c": 19.0}, {"r": "A", "n": "TROTTA", "s": "CRO", "c": 0.0}], "Polisportiva Calitri": [{"r": "P", "n": "SKORUPSKI", "s": "EMP", "c": 16.0}, {"r": "P", "n": "SORRENTINO", "s": "CHI", "c": 20.0}, {"r": "P", "n": "LAMANNA", "s": "GEN", "c": 2.0}, {"r": "D", "n": "ACERBI", "s": "SAS", "c": 17.0}, {"r": "D", "n": "HYSAJ", "s": "NAP", "c": 13.0}, {"r": "D", "n": "PALETTA", "s": "MIL", "c": 10.0}, {"r": "D", "n": "EMERSON", "s": "ROM", "c": 7.0}, {"r": "D", "n": "CACCIATORE", "s": "CHI", "c": 7.0}, {"r": "D", "n": "MASINA", "s": "BOL", "c": 7.0}, {"r": "D", "n": "IZZO", "s": "GEN", "c": 14.0}, {"r": "D", "n": "MARIO RUI", "s": "ROM", "c": 0.0}, {"r": "C", "n": "PERISIC", "s": "INT", "c": 26.0}, {"r": "C", "n": "IAGO FALQUE", "s": "TOR", "c": 13.0}, {"r": "C", "n": "PJANIC", "s": "JUV", "c": 27.0}, {"r": "C", "n": "POLITANO", "s": "SAS", "c": 0.0}, {"r": "C", "n": "KESSIE'", "s": "ATA", "c": 15.0}, {"r": "C", "n": "KREJCI", "s": "BOL", "c": 12.0}, {"r": "C", "n": "TORREIRA", "s": "SAM", "c": 10.0}, {"r": "C", "n": "ZAJC", "s": "EMP", "c": 5.0}, {"r": "A", "n": "BELOTTI", "s": "TOR", "c": 62.0}, {"r": "A", "n": "DEFREL", "s": "SAS", "c": 0.0}, {"r": "A", "n": "SAU", "s": "CAG", "c": 0.0}, {"r": "A", "n": "BAHEBECK", "s": "PES", "c": 5.0}, {"r": "A", "n": "MILIK", "s": "NAP", "c": 8.0}, {"r": "A", "n": "PAVOLETTI", "s": "NAP", "c": 49.0}], "Vladigrado": [{"r": "P", "n": "BUFFON", "s": "JUV", "c": 28.0}, {"r": "P", "n": "NETO", "s": "JUV", "c": 1.0}, {"r": "P", "n": "AUDERO", "s": "JUV", "c": 1.0}, {"r": "D", "n": "MASIELLO A", "s": "ATA", "c": 14.0}, {"r": "D", "n": "FERRARI G", "s": "CRO", "c": 8.0}, {"r": "D", "n": "MIRANDA", "s": "INT", "c": 16.0}, {"r": "D", "n": "PELUSO", "s": "SAS", "c": 6.0}, {"r": "D", "n": "BIRAGHI", "s": "PES", "c": 6.0}, {"r": "D", "n": "REGINI", "s": "SAM", "c": 8.0}, {"r": "D", "n": "FLORENZI", "s": "ROM", "c": 32.0}, {"r": "D", "n": "TROIANI", "s": "CHI", "c": 1.0}, {"r": "C", "n": "GOMEZ A", "s": "ATA", "c": 21.0}, {"r": "C", "n": "BERNARDESCHI", "s": "FIO", "c": 16.0}, {"r": "C", "n": "PEROTTI", "s": "ROM", "c": 0.0}, {"r": "C", "n": "JANKTO", "s": "UDI", "c": 10.0}, {"r": "C", "n": "BADELJ", "s": "FIO", "c": 11.0}, {"r": "C", "n": "RIGONI", "s": "GEN", "c": 16.0}, {"r": "C", "n": "TAARABT", "s": "GEN", "c": 15.0}, {"r": "C", "n": "TABACCHI", "s": "BOL", "c": 1.0}, {"r": "A", "n": "DZEKO", "s": "ROM", "c": 30.0}, {"r": "A", "n": "INSIGNE", "s": "NAP", "c": 55.0}, {"r": "A", "n": "ICARDI", "s": "INT", "c": 71.0}, {"r": "A", "n": "KALINIC", "s": "FIO", "c": 26.0}, {"r": "A", "n": "BABACAR", "s": "FIO", "c": 12.0}, {"r": "A", "n": "PINAMONTI", "s": "INT", "c": 1.0}], "Lino Banfield": [{"r": "P", "n": "HANDANOVIC", "s": "INT", "c": 20.0}, {"r": "P", "n": "PELAGOTTI", "s": "EMP", "c": 1.0}, {"r": "P", "n": "CARRIZO", "s": "INT", "c": 1.0}, {"r": "D", "n": "ALEX SANDRO", "s": "JUV", "c": 24.0}, {"r": "D", "n": "DE VRIJ", "s": "LAZ", "c": 14.0}, {"r": "D", "n": "PASQUAL", "s": "EMP", "c": 11.0}, {"r": "D", "n": "CECCHERINI", "s": "CRO", "c": 6.0}, {"r": "D", "n": "SAMIR", "s": "UDI", "c": 3.0}, {"r": "D", "n": "GOLDANIGA", "s": "PAL", "c": 4.0}, {"r": "D", "n": "GRANATA", "s": "NAP", "c": 1.0}, {"r": "D", "n": "PUNZI", "s": "PAL", "c": 1.0}, {"r": "C", "n": "HAMSIK", "s": "NAP", "c": 28.0}, {"r": "C", "n": "LULIC", "s": "LAZ", "c": 10.0}, {"r": "C", "n": "BRUNO FERNANDES", "s": "SAM", "c": 16.0}, {"r": "C", "n": "JOAO MARIO", "s": "INT", "c": 33.0}, {"r": "C", "n": "DE PAUL", "s": "UDI", "c": 8.0}, {"r": "C", "n": "EL KADDOURI", "s": "EMP", "c": 6.0}, {"r": "C", "n": "JAJALO", "s": "PAL", "c": 6.0}, {"r": "C", "n": "DIAKHATE", "s": "FIO", "c": 1.0}, {"r": "A", "n": "HIGUAIN", "s": "JUV", "c": 96.0}, {"r": "A", "n": "SCHICK", "s": "SAM", "c": 14.0}, {"r": "A", "n": "MATRI", "s": "SAS", "c": 16.0}, {"r": "A", "n": "MACCARONE", "s": "EMP", "c": 17.0}, {"r": "A", "n": "MCHEDLIDZE", "s": "EMP", "c": 13.0}, {"r": "A", "n": "PIERINI N", "s": "SAS", "c": 1.0}], "Vis Anto": [{"r": "P", "n": "REINA", "s": "NAP", "c": 19.0}, {"r": "P", "n": "TATARUSANU", "s": "FIO", "c": 15.0}, {"r": "P", "n": "VIVIANO", "s": "SAM", "c": 12.0}, {"r": "D", "n": "RISPOLI", "s": "PAL", "c": 7.0}, {"r": "D", "n": "ROMAGNOLI A", "s": "MIL", "c": 14.0}, {"r": "D", "n": "BENATIA", "s": "JUV", "c": 19.0}, {"r": "D", "n": "BRUNO ALVES", "s": "CAG", "c": 8.0}, {"r": "D", "n": "MAIETTA", "s": "BOL", "c": 7.0}, {"r": "D", "n": "LAURINI", "s": "EMP", "c": 0.0}, {"r": "D", "n": "DE SCIGLIO", "s": "MIL", "c": 8.0}, {"r": "D", "n": "ABATE", "s": "MIL", "c": 10.0}, {"r": "C", "n": "LJAJIC", "s": "TOR", "c": 30.0}, {"r": "C", "n": "ZIELINSKI", "s": "NAP", "c": 13.0}, {"r": "C", "n": "DZEMAILI *", "s": "BOL", "c": 18.0}, {"r": "C", "n": "KHEDIRA", "s": "JUV", "c": 27.0}, {"r": "C", "n": "DIAMANTI", "s": "PAL", "c": 15.0}, {"r": "C", "n": "BARRETO E", "s": "SAM", "c": 8.0}, {"r": "C", "n": "RINCON", "s": "JUV", "c": 13.0}, {"r": "C", "n": "VERRE", "s": "PES", "c": 8.0}, {"r": "A", "n": "QUAGLIARELLA", "s": "SAM", "c": 18.0}, {"r": "A", "n": "DESTRO", "s": "BOL", "c": 27.0}, {"r": "A", "n": "NESTOROVSKI", "s": "PAL", "c": 29.0}, {"r": "A", "n": "LAPADULA", "s": "MIL", "c": 17.0}, {"r": "A", "n": "SIMEONE", "s": "GEN", "c": 30.0}, {"r": "A", "n": "BOYE'", "s": "TOR", "c": 0.0}], "Poggibonsi": [{"r": "P", "n": "KARNEZIS", "s": "UDI", "c": 11.0}, {"r": "P", "n": "HART", "s": "TOR", "c": 12.0}, {"r": "P", "n": "MARCHETTI", "s": "LAZ", "c": 10.0}, {"r": "D", "n": "CONTI", "s": "ATA", "c": 7.0}, {"r": "D", "n": "SILVESTRE", "s": "SAM", "c": 10.0}, {"r": "D", "n": "LICHTSTEINER", "s": "JUV", "c": 9.0}, {"r": "D", "n": "WIDMER", "s": "UDI", "c": 15.0}, {"r": "D", "n": "ROSI", "s": "CRO", "c": 3.0}, {"r": "D", "n": "ANSALDI", "s": "INT", "c": 16.0}, {"r": "D", "n": "GAMBERINI", "s": "CHI", "c": 9.0}, {"r": "D", "n": "BARRECA", "s": "TOR", "c": 8.0}, {"r": "C", "n": "FELIPE ANDERSON", "s": "LAZ", "c": 18.0}, {"r": "C", "n": "CANDREVA", "s": "INT", "c": 28.0}, {"r": "C", "n": "VERDI", "s": "BOL", "c": 14.0}, {"r": "C", "n": "MILINKOVIC-SAVIC", "s": "LAZ", "c": 15.0}, {"r": "C", "n": "GAGLIARDINI", "s": "INT", "c": 8.0}, {"r": "C", "n": "LAXALT", "s": "GEN", "c": 12.0}, {"r": "C", "n": "BENASSI", "s": "TOR", "c": 12.0}, {"r": "C", "n": "FOFANA", "s": "UDI", "c": 15.0}, {"r": "A", "n": "KEITA B", "s": "LAZ", "c": 16.0}, {"r": "A", "n": "DYBALA", "s": "JUV", "c": 105.0}, {"r": "A", "n": "FALCINELLI", "s": "CRO", "c": 8.0}, {"r": "A", "n": "PELLISSIER", "s": "CHI", "c": 18.0}, {"r": "A", "n": "MURIEL", "s": "SAM", "c": 29.0}, {"r": "A", "n": "ILICIC", "s": "FIO", "c": 24.0}]}, "2017/2018": {"Boca Figa": [{"r": "P", "n": "HANDANOVIC", "s": "INT", "c": 31.0}, {"r": "P", "n": "BERNI", "s": "INT", "c": 1.0}, {"r": "P", "n": "PADELLI", "s": "INT", "c": 1.0}, {"r": "D", "n": "ALEX SANDRO", "s": "JUV", "c": 34.0}, {"r": "D", "n": "CECCHERINI", "s": "CRO", "c": 3.0}, {"r": "D", "n": "CACCIATORE", "s": "CHI", "c": 10.0}, {"r": "D", "n": "BERESZYNSKI", "s": "SAM", "c": 0.0}, {"r": "D", "n": "ASAMOAH", "s": "JUV", "c": 5.0}, {"r": "D", "n": "AJETI", "s": "CRO", "c": 3.0}, {"r": "D", "n": "ROGERIO", "s": "SAS", "c": 1.0}, {"r": "D", "n": "ANDERSEN", "s": "SAM", "c": 1.0}, {"r": "C", "n": "DOUGLAS COSTA", "s": "JUV", "c": 45.0}, {"r": "C", "n": "IAGO FALQUE", "s": "TOR", "c": 0.0}, {"r": "C", "n": "BERNARDESCHI", "s": "JUV", "c": 47.0}, {"r": "C", "n": "FREULER", "s": "ATA", "c": 17.0}, {"r": "C", "n": "CANDREVA", "s": "INT", "c": 0.0}, {"r": "C", "n": "DZEMAILI", "s": "BOL", "c": 35.0}, {"r": "C", "n": "LANER", "s": "VER", "c": 1.0}, {"r": "C", "n": "BRUNO JORDAO", "s": "LAZ", "c": 1.0}, {"r": "A", "n": "IMMOBILE", "s": "LAZ", "c": 104.0}, {"r": "A", "n": "INSIGNE", "s": "NAP", "c": 67.0}, {"r": "A", "n": "POLITANO", "s": "SAS", "c": 15.0}, {"r": "A", "n": "KOWNACKI", "s": "SAM", "c": 0.0}, {"r": "A", "n": "RICCI", "s": "CRO", "c": 13.0}, {"r": "A", "n": "SALCEDO MORA", "s": "GEN", "c": 1.0}], "Poggibonsi": [{"r": "P", "n": "SPORTIELLO", "s": "FIO", "c": 10.0}, {"r": "P", "n": "STRAKOSHA", "s": "LAZ", "c": 14.0}, {"r": "P", "n": "DRAGOWSKI", "s": "FIO", "c": 1.0}, {"r": "D", "n": "DE VRIJ", "s": "LAZ", "c": 16.0}, {"r": "D", "n": "FAZIO", "s": "ROM", "c": 8.0}, {"r": "D", "n": "N'KOULOU", "s": "TOR", "c": 7.0}, {"r": "D", "n": "MARIO RUI", "s": "NAP", "c": 3.0}, {"r": "D", "n": "MARUSIC", "s": "LAZ", "c": 11.0}, {"r": "D", "n": "LUKAKU J", "s": "LAZ", "c": 5.0}, {"r": "D", "n": "SAMIR", "s": "UDI", "c": 0.0}, {"r": "D", "n": "BASTA", "s": "LAZ", "c": 7.0}, {"r": "C", "n": "MILINKOVIC-SAVIC", "s": "LAZ", "c": 42.0}, {"r": "C", "n": "CALHANOGLU", "s": "MIL", "c": 16.0}, {"r": "C", "n": "ALLAN", "s": "NAP", "c": 25.0}, {"r": "C", "n": "KESSIE'", "s": "MIL", "c": 26.0}, {"r": "C", "n": "BARAK", "s": "UDI", "c": 11.0}, {"r": "C", "n": "CUADRADO", "s": "JUV", "c": 17.0}, {"r": "C", "n": "BORJA VALERO", "s": "INT", "c": 13.0}, {"r": "C", "n": "JORGINHO", "s": "NAP", "c": 9.0}, {"r": "A", "n": "DYBALA", "s": "JUV", "c": 133.0}, {"r": "A", "n": "ZAPATA D", "s": "SAM", "c": 32.0}, {"r": "A", "n": "MANDZUKIC", "s": "JUV", "c": 17.0}, {"r": "A", "n": "THEREAU", "s": "FIO", "c": 46.0}, {"r": "A", "n": "PETAGNA", "s": "ATA", "c": 13.0}, {"r": "A", "n": "BABACAR", "s": "SAS", "c": 13.0}], "Vasilis Unitis": [{"r": "P", "n": "PERIN", "s": "GEN", "c": 13.0}, {"r": "P", "n": "VIVIANO", "s": "SAM", "c": 10.0}, {"r": "P", "n": "PUGGIONI", "s": "BEN", "c": 7.0}, {"r": "D", "n": "KOLAROV", "s": "ROM", "c": 21.0}, {"r": "D", "n": "DE SILVESTRI", "s": "TOR", "c": 10.0}, {"r": "D", "n": "BONUCCI", "s": "MIL", "c": 20.0}, {"r": "D", "n": "CACERES", "s": "LAZ", "c": 6.0}, {"r": "D", "n": "DANILO", "s": "UDI", "c": 6.0}, {"r": "D", "n": "GHOULAM", "s": "NAP", "c": 6.0}, {"r": "D", "n": "JUAN JESUS", "s": "ROM", "c": 10.0}, {"r": "D", "n": "CONTI", "s": "MIL", "c": 25.0}, {"r": "C", "n": "NAINGGOLAN", "s": "ROM", "c": 45.0}, {"r": "C", "n": "ILICIC", "s": "ATA", "c": 17.0}, {"r": "C", "n": "KHEDIRA", "s": "JUV", "c": 17.0}, {"r": "C", "n": "TORREIRA", "s": "SAM", "c": 8.0}, {"r": "C", "n": "PRAET", "s": "SAM", "c": 8.0}, {"r": "C", "n": "DE ROON", "s": "ATA", "c": 10.0}, {"r": "C", "n": "PELLEGRINI", "s": "ROM", "c": 10.0}, {"r": "C", "n": "DE ROSSI", "s": "ROM", "c": 15.0}, {"r": "A", "n": "MERTENS", "s": "NAP", "c": 127.0}, {"r": "A", "n": "QUAGLIARELLA", "s": "SAM", "c": 36.0}, {"r": "A", "n": "MILIK", "s": "NAP", "c": 31.0}, {"r": "A", "n": "DI FRANCESCO F", "s": "BOL", "c": 23.0}, {"r": "A", "n": "CORNELIUS", "s": "ATA", "c": 13.0}, {"r": "A", "n": "TAARABT", "s": "GEN", "c": 11.0}], "SC Oreggio": [{"r": "P", "n": "SIRIGU", "s": "TOR", "c": 11.0}, {"r": "P", "n": "SORRENTINO", "s": "CHI", "c": 11.0}, {"r": "P", "n": "BERISHA", "s": "ATA", "c": 15.0}, {"r": "D", "n": "MASIELLO A", "s": "ATA", "c": 15.0}, {"r": "D", "n": "TOLOI", "s": "ATA", "c": 0.0}, {"r": "D", "n": "ANSALDI", "s": "TOR", "c": 6.0}, {"r": "D", "n": "D'AMBROSIO", "s": "INT", "c": 10.0}, {"r": "D", "n": "MIRANDA", "s": "INT", "c": 11.0}, {"r": "D", "n": "CALABRIA", "s": "MIL", "c": 7.0}, {"r": "D", "n": "WALLACE", "s": "LAZ", "c": 7.0}, {"r": "D", "n": "SIMIC S", "s": "CRO", "c": 0.0}, {"r": "C", "n": "HAMSIK", "s": "NAP", "c": 0.0}, {"r": "C", "n": "RAMIREZ", "s": "SAM", "c": 5.0}, {"r": "C", "n": "JANKTO", "s": "UDI", "c": 0.0}, {"r": "C", "n": "VECINO", "s": "INT", "c": 11.0}, {"r": "C", "n": "BIGLIA", "s": "MIL", "c": 12.0}, {"r": "C", "n": "DONSAH", "s": "BOL", "c": 9.0}, {"r": "C", "n": "HILJEMARK", "s": "GEN", "c": 5.0}, {"r": "C", "n": "RIGONI L", "s": "GEN", "c": 11.0}, {"r": "A", "n": "ICARDI", "s": "INT", "c": 181.0}, {"r": "A", "n": "ANTENUCCI", "s": "SPA", "c": 16.0}, {"r": "A", "n": "PAVOLETTI", "s": "CAG", "c": 46.0}, {"r": "A", "n": "CUTRONE", "s": "MIL", "c": 0.0}, {"r": "A", "n": "DESTRO", "s": "BOL", "c": 0.0}, {"r": "A", "n": "CERCI", "s": "VER", "c": 11.0}], "Polisportiva Calitri": [{"r": "P", "n": "ALISSON", "s": "ROM", "c": 29.0}, {"r": "P", "n": "SKORUPSKI", "s": "ROM", "c": 1.0}, {"r": "P", "n": "LOBONT", "s": "ROM", "c": 1.0}, {"r": "D", "n": "ROMULO", "s": "VER", "c": 11.0}, {"r": "D", "n": "ACERBI", "s": "SAS", "c": 22.0}, {"r": "D", "n": "MANOLAS", "s": "ROM", "c": 14.0}, {"r": "D", "n": "PEZZELLA GER", "s": "FIO", "c": 10.0}, {"r": "D", "n": "CALDARA", "s": "ATA", "c": 20.0}, {"r": "D", "n": "FERRARI G", "s": "SAM", "c": 9.0}, {"r": "D", "n": "IZZO", "s": "GEN", "c": 7.0}, {"r": "D", "n": "HRISTOV", "s": "FIO", "c": 1.0}, {"r": "C", "n": "PJANIC", "s": "JUV", "c": 26.0}, {"r": "C", "n": "CHIESA", "s": "FIO", "c": 25.0}, {"r": "C", "n": "BONAVENTURA", "s": "MIL", "c": 0.0}, {"r": "C", "n": "PAROLO", "s": "LAZ", "c": 0.0}, {"r": "C", "n": "BASELLI", "s": "TOR", "c": 0.0}, {"r": "C", "n": "BARELLA", "s": "CAG", "c": 8.0}, {"r": "C", "n": "GIACCHERINI", "s": "CHI", "c": 9.0}, {"r": "C", "n": "BENALI", "s": "CRO", "c": 14.0}, {"r": "A", "n": "BELOTTI", "s": "TOR", "c": 143.0}, {"r": "A", "n": "VERDI", "s": "BOL", "c": 20.0}, {"r": "A", "n": "LASAGNA", "s": "UDI", "c": 36.0}, {"r": "A", "n": "INGLESE", "s": "CHI", "c": 0.0}, {"r": "A", "n": "PALOSCHI", "s": "SPA", "c": 16.0}, {"r": "A", "n": "MAXI LOPEZ", "s": "UDI", "c": 11.0}], "Vladigrado": [{"r": "P", "n": "REINA", "s": "NAP", "c": 28.0}, {"r": "P", "n": "SEPE", "s": "NAP", "c": 2.0}, {"r": "P", "n": "RAFAEL CABRAL", "s": "NAP", "c": 1.0}, {"r": "D", "n": "RUGANI", "s": "JUV", "c": 9.0}, {"r": "D", "n": "SILVESTRE", "s": "SAM", "c": 7.0}, {"r": "D", "n": "CHIELLINI", "s": "JUV", "c": 14.0}, {"r": "D", "n": "BENATIA", "s": "JUV", "c": 13.0}, {"r": "D", "n": "NUYTINCK", "s": "UDI", "c": 7.0}, {"r": "D", "n": "VICARI", "s": "SPA", "c": 4.0}, {"r": "D", "n": "HOWEDES", "s": "JUV", "c": 3.0}, {"r": "D", "n": "BEARZOTTI", "s": "VER", "c": 1.0}, {"r": "C", "n": "LJAJIC", "s": "TOR", "c": 17.0}, {"r": "C", "n": "ZIELINSKI", "s": "NAP", "c": 0.0}, {"r": "C", "n": "LUIS ALBERTO", "s": "LAZ", "c": 48.0}, {"r": "C", "n": "BROZOVIC", "s": "INT", "c": 12.0}, {"r": "C", "n": "BIRSA", "s": "CHI", "c": 26.0}, {"r": "C", "n": "VERETOUT", "s": "FIO", "c": 13.0}, {"r": "C", "n": "DE PAUL", "s": "UDI", "c": 0.0}, {"r": "C", "n": "CASTRO", "s": "CHI", "c": 0.0}, {"r": "A", "n": "DZEKO", "s": "ROM", "c": 90.0}, {"r": "A", "n": "KALINIC", "s": "MIL", "c": 39.0}, {"r": "A", "n": "FALCINELLI", "s": "FIO", "c": 45.0}, {"r": "A", "n": "NANI", "s": "LAZ", "c": 0.0}, {"r": "A", "n": "PALACIO", "s": "BOL", "c": 15.0}, {"r": "A", "n": "CAPRARI", "s": "SAM", "c": 13.0}], "Team onto": [{"r": "P", "n": "DONNARUMMA G", "s": "MIL", "c": 33.0}, {"r": "P", "n": "BIZZARRI", "s": "UDI", "c": 12.0}, {"r": "P", "n": "DONNARUMMA A", "s": "MIL", "c": 1.0}, {"r": "D", "n": "KOULIBALY", "s": "NAP", "c": 19.0}, {"r": "D", "n": "ALBIOL", "s": "NAP", "c": 14.0}, {"r": "D", "n": "FLORENZI", "s": "ROM", "c": 19.0}, {"r": "D", "n": "RADU", "s": "LAZ", "c": 6.0}, {"r": "D", "n": "DE SCIGLIO", "s": "JUV", "c": 8.0}, {"r": "D", "n": "LICHTSTEINER", "s": "JUV", "c": 12.0}, {"r": "D", "n": "MURRU", "s": "SAM", "c": 7.0}, {"r": "D", "n": "STRINIC", "s": "SAM", "c": 6.0}, {"r": "C", "n": "LUCAS LEIVA", "s": "LAZ", "c": 6.0}, {"r": "C", "n": "UNDER", "s": "ROM", "c": 3.0}, {"r": "C", "n": "PEROTTI", "s": "ROM", "c": 35.0}, {"r": "C", "n": "HETEMAJ", "s": "CHI", "c": 10.0}, {"r": "C", "n": "MISSIROLI", "s": "SAS", "c": 8.0}, {"r": "C", "n": "LINETTY", "s": "SAM", "c": 16.0}, {"r": "C", "n": "BARRETO E", "s": "SAM", "c": 9.0}, {"r": "C", "n": "OMEONGA", "s": "GEN", "c": 3.0}, {"r": "A", "n": "HIGUAIN", "s": "JUV", "c": 166.0}, {"r": "A", "n": "SIMEONE", "s": "FIO", "c": 0.0}, {"r": "A", "n": "EL SHAARAWY", "s": "ROM", "c": 16.0}, {"r": "A", "n": "TROTTA", "s": "CRO", "c": 13.0}, {"r": "A", "n": "VERDE", "s": "VER", "c": 6.0}, {"r": "A", "n": "DEFREL", "s": "ROM", "c": 18.0}], "Lino Banfield": [{"r": "P", "n": "BUFFON", "s": "JUV", "c": 0.0}, {"r": "P", "n": "SZCZESNY", "s": "JUV", "c": 0.0}, {"r": "P", "n": "PINSOGLIO", "s": "JUV", "c": 1.0}, {"r": "D", "n": "SKRINIAR", "s": "INT", "c": 9.0}, {"r": "D", "n": "CANCELO", "s": "INT", "c": 9.0}, {"r": "D", "n": "HATEBOER", "s": "ATA", "c": 0.0}, {"r": "D", "n": "HYSAJ", "s": "NAP", "c": 8.0}, {"r": "D", "n": "BIRAGHI", "s": "FIO", "c": 0.0}, {"r": "D", "n": "TOMOVIC", "s": "CHI", "c": 3.0}, {"r": "D", "n": "MASINA", "s": "BOL", "c": 5.0}, {"r": "D", "n": "LIROLA", "s": "SAS", "c": 9.0}, {"r": "C", "n": "PERISIC", "s": "INT", "c": 53.0}, {"r": "C", "n": "RAFINHA", "s": "INT", "c": 14.0}, {"r": "C", "n": "FELIPE ANDERSON", "s": "LAZ", "c": 31.0}, {"r": "C", "n": "CRISTANTE", "s": "ATA", "c": 0.0}, {"r": "C", "n": "BENASSI", "s": "FIO", "c": 13.0}, {"r": "C", "n": "JOAO PEDRO", "s": "CAG", "c": 0.0}, {"r": "C", "n": "FOFANA", "s": "UDI", "c": 0.0}, {"r": "C", "n": "ZANELLATO", "s": "CRO", "c": 1.0}, {"r": "A", "n": "CALLEJON", "s": "NAP", "c": 60.0}, {"r": "A", "n": "GOMEZ A", "s": "ATA", "c": 67.0}, {"r": "A", "n": "SUSO", "s": "MIL", "c": 50.0}, {"r": "A", "n": "SCHICK", "s": "ROM", "c": 64.0}, {"r": "A", "n": "NIANG", "s": "TOR", "c": 20.0}, {"r": "A", "n": "KEAN", "s": "VER", "c": 9.0}]}, "2018/2019": {"Polisportiva Calitri": [{"r": "P", "n": "SEPE", "s": "Par", "c": 10.0}, {"r": "P", "n": "SIRIGU", "s": "Tor", "c": 17.0}, {"r": "P", "n": "MUSSO", "s": "Udi", "c": 9.0}, {"r": "D", "n": "MASIELLO A", "s": "Ata", "c": 15.0}, {"r": "D", "n": "CHIELLINI", "s": "Juv", "c": 18.0}, {"r": "D", "n": "GHOULAM", "s": "Nap", "c": 8.0}, {"r": "D", "n": "BRUNO ALVES", "s": "Par", "c": 12.0}, {"r": "D", "n": "KOLAROV", "s": "Rom", "c": 26.0}, {"r": "D", "n": "MANCINI G", "s": "Ata", "c": 10.0}, {"r": "D", "n": "DJIDJI", "s": "Tor", "c": 7.0}, {"r": "D", "n": "ROMERO C", "s": "Gen", "c": 5.0}, {"r": "C", "n": "KURTIC", "s": "SPA", "c": 0.0}, {"r": "C", "n": "BIRSA", "s": "Cag", "c": 24.0}, {"r": "C", "n": "ILICIC", "s": "Ata", "c": 32.0}, {"r": "C", "n": "PEROTTI", "s": "Rom", "c": 16.0}, {"r": "C", "n": "MILINKOVIC-SAVIC", "s": "Laz", "c": 47.0}, {"r": "C", "n": "DONSAH", "s": "Bol", "c": 3.0}, {"r": "C", "n": "PRAET", "s": "Sam", "c": 12.0}, {"r": "C", "n": "SUSO", "s": "Mil", "c": 30.0}, {"r": "A", "n": "BELOTTI", "s": "Tor", "c": 127.0}, {"r": "A", "n": "GERVINHO", "s": "Par", "c": 21.0}, {"r": "A", "n": "POLITANO", "s": "Int", "c": 20.0}, {"r": "A", "n": "SANTANDER", "s": "Bol", "c": 12.0}, {"r": "A", "n": "KOUAME'", "s": "Gen", "c": 5.0}, {"r": "A", "n": "CAPUTO", "s": "Emp", "c": 27.0}], "Boca Figa": [{"r": "P", "n": "PERIN", "s": "Juv", "c": 1.0}, {"r": "P", "n": "CONSIGLI", "s": "Sas", "c": 10.0}, {"r": "P", "n": "LAFONT", "s": "Fio", "c": 20.0}, {"r": "D", "n": "ROMAGNOLI A", "s": "Mil", "c": 10.0}, {"r": "D", "n": "ADJAPONG", "s": "Sas", "c": 2.0}, {"r": "D", "n": "FERRARI G", "s": "Sas", "c": 10.0}, {"r": "D", "n": "LIROLA", "s": "Sas", "c": 7.0}, {"r": "D", "n": "PEZZELLA GER", "s": "Fio", "c": 13.0}, {"r": "D", "n": "STRYGER LARSEN", "s": "Udi", "c": 8.0}, {"r": "D", "n": "COLLEY", "s": "Sam", "c": 7.0}, {"r": "D", "n": "MALCUIT", "s": "Nap", "c": 6.0}, {"r": "C", "n": "BERNARDESCHI", "s": "Juv", "c": 14.0}, {"r": "C", "n": "PAROLO", "s": "Laz", "c": 0.0}, {"r": "C", "n": "PJANIC", "s": "Juv", "c": 33.0}, {"r": "C", "n": "CORREA", "s": "Laz", "c": 12.0}, {"r": "C", "n": "PELLEGRINI LO", "s": "Rom", "c": 37.0}, {"r": "C", "n": "BENASSI", "s": "Fio", "c": 20.0}, {"r": "C", "n": "DOUGLAS COSTA", "s": "Juv", "c": 46.0}, {"r": "C", "n": "SORIANO", "s": "Bol", "c": 8.0}, {"r": "A", "n": "INGLESE", "s": "Par", "c": 34.0}, {"r": "A", "n": "DYBALA", "s": "Juv", "c": 100.0}, {"r": "A", "n": "MANDZUKIC", "s": "Juv", "c": 28.0}, {"r": "A", "n": "GABBIADINI", "s": "Sam", "c": 20.0}, {"r": "A", "n": "PINAMONTI", "s": "Fro", "c": 8.0}, {"r": "A", "n": "PIATEK", "s": "Mil", "c": 36.0}], "Vladigrado": [{"r": "P", "n": "BERNI", "s": "Int", "c": 1.0}, {"r": "P", "n": "HANDANOVIC", "s": "Int", "c": 26.0}, {"r": "P", "n": "PADELLI", "s": "Int", "c": 1.0}, {"r": "D", "n": "CESAR", "s": "Chi", "c": 1.0}, {"r": "D", "n": "SANTON", "s": "Rom", "c": 4.0}, {"r": "D", "n": "FLORENZI", "s": "Rom", "c": 17.0}, {"r": "D", "n": "ACERBI", "s": "Laz", "c": 15.0}, {"r": "D", "n": "BIRASCHI", "s": "Gen", "c": 8.0}, {"r": "D", "n": "KARSDORP", "s": "Rom", "c": 3.0}, {"r": "D", "n": "N'KOULOU", "s": "Tor", "c": 17.0}, {"r": "D", "n": "ANDERSEN", "s": "Sam", "c": 8.0}, {"r": "C", "n": "KRUNIC", "s": "Emp", "c": 10.0}, {"r": "C", "n": "ZIELINSKI", "s": "Nap", "c": 31.0}, {"r": "C", "n": "JOAO PEDRO", "s": "Cag", "c": 0.0}, {"r": "C", "n": "LINETTY", "s": "Sam", "c": 8.0}, {"r": "C", "n": "PASTORE", "s": "Rom", "c": 16.0}, {"r": "C", "n": "ZANIOLO", "s": "Rom", "c": 1.0}, {"r": "C", "n": "RUIZ", "s": "Nap", "c": 50.0}, {"r": "C", "n": "RICCARDI", "s": "Rom", "c": 1.0}, {"r": "A", "n": "IAGO FALQUE", "s": "Tor", "c": 26.0}, {"r": "A", "n": "MURIEL", "s": "Fio", "c": 24.0}, {"r": "A", "n": "QUAGLIARELLA", "s": "Sam", "c": 28.0}, {"r": "A", "n": "DEFREL", "s": "Sam", "c": 20.0}, {"r": "A", "n": "CIANO", "s": "Fro", "c": 12.0}, {"r": "A", "n": "OKAKA", "s": "Udi", "c": 11.0}], "SC Oreggio": [{"r": "P", "n": "AUDERO", "s": "Sam", "c": 9.0}, {"r": "P", "n": "RADU I", "s": "Gen", "c": 7.0}, {"r": "P", "n": "CRAGNO", "s": "Cag", "c": 7.0}, {"r": "D", "n": "DE SILVESTRI", "s": "Tor", "c": 0.0}, {"r": "D", "n": "ANSALDI", "s": "Tor", "c": 10.0}, {"r": "D", "n": "FARAGO'", "s": "Cag", "c": 4.0}, {"r": "D", "n": "HATEBOER", "s": "Ata", "c": 13.0}, {"r": "D", "n": "GOSENS", "s": "Ata", "c": 11.0}, {"r": "D", "n": "CASTAGNE", "s": "Ata", "c": 8.0}, {"r": "D", "n": "CANCELO", "s": "Juv", "c": 29.0}, {"r": "D", "n": "SRNA", "s": "Cag", "c": 0.0}, {"r": "C", "n": "DE ROON", "s": "Ata", "c": 8.0}, {"r": "C", "n": "KUCKA", "s": "Par", "c": 9.0}, {"r": "C", "n": "LAZOVIC", "s": "Gen", "c": 6.0}, {"r": "C", "n": "CRISTANTE", "s": "Rom", "c": 25.0}, {"r": "C", "n": "CALHANOGLU", "s": "Mil", "c": 14.0}, {"r": "C", "n": "LAZZARI M", "s": "SPA", "c": 25.0}, {"r": "C", "n": "RAMIREZ", "s": "Sam", "c": 4.0}, {"r": "C", "n": "CASTILLEJO", "s": "Mil", "c": 13.0}, {"r": "A", "n": "PAVOLETTI", "s": "Cag", "c": 40.0}, {"r": "A", "n": "KEITA B", "s": "Int", "c": 7.0}, {"r": "A", "n": "MILIK", "s": "Nap", "c": 100.0}, {"r": "A", "n": "SIMEONE", "s": "Fio", "c": 65.0}, {"r": "A", "n": "PELLISSIER", "s": "Chi", "c": 16.0}, {"r": "A", "n": "BARROW", "s": "Ata", "c": 8.0}], "Lino Banfield": [{"r": "P", "n": "DONNARUMMA A", "s": "Mil", "c": 1.0}, {"r": "P", "n": "DONNARUMMA G", "s": "Mil", "c": 21.0}, {"r": "P", "n": "REINA", "s": "Mil", "c": 1.0}, {"r": "D", "n": "CONTI", "s": "Mil", "c": 6.0}, {"r": "D", "n": "PASQUAL", "s": "Emp", "c": 7.0}, {"r": "D", "n": "TOLOI", "s": "Ata", "c": 15.0}, {"r": "D", "n": "SKRINIAR", "s": "Int", "c": 18.0}, {"r": "D", "n": "MURRU", "s": "Sam", "c": 8.0}, {"r": "D", "n": "PALOMINO", "s": "Ata", "c": 7.0}, {"r": "D", "n": "NUYTINCK", "s": "Udi", "c": 5.0}, {"r": "D", "n": "AINA", "s": "Tor", "c": 5.0}, {"r": "C", "n": "BROZOVIC", "s": "Int", "c": 15.0}, {"r": "C", "n": "NAINGGOLAN", "s": "Int", "c": 0.0}, {"r": "C", "n": "DE PAUL", "s": "Udi", "c": 18.0}, {"r": "C", "n": "KIYINE", "s": "Chi", "c": 3.0}, {"r": "C", "n": "DEPAOLI", "s": "Chi", "c": 7.0}, {"r": "C", "n": "VERETOUT", "s": "Fio", "c": 16.0}, {"r": "C", "n": "BARILLA'", "s": "Par", "c": 7.0}, {"r": "C", "n": "KULUSEVSKI", "s": "Ata", "c": 1.0}, {"r": "A", "n": "LASAGNA", "s": "Udi", "c": 28.0}, {"r": "A", "n": "MERTENS", "s": "Nap", "c": 58.0}, {"r": "A", "n": "SANSONE N", "s": "Bol", "c": 10.0}, {"r": "A", "n": "ZAPATA D", "s": "Ata", "c": 58.0}, {"r": "A", "n": "ORSOLINI", "s": "Bol", "c": 3.0}, {"r": "A", "n": "CRISTIANO RONALDO", "s": "Juv", "c": 162.0}], "Team Onto": [{"r": "P", "n": "BERISHA E", "s": "Ata", "c": 16.0}, {"r": "P", "n": "GOLLINI", "s": "Ata", "c": 7.0}, {"r": "P", "n": "STRAKOSHA", "s": "Laz", "c": 16.0}, {"r": "D", "n": "JUAN JESUS", "s": "Rom", "c": 6.0}, {"r": "D", "n": "ASAMOAH", "s": "Int", "c": 15.0}, {"r": "D", "n": "DE VRIJ", "s": "Int", "c": 20.0}, {"r": "D", "n": "MANOLAS", "s": "Rom", "c": 20.0}, {"r": "D", "n": "ALEX SANDRO", "s": "Juv", "c": 17.0}, {"r": "D", "n": "CALABRESI", "s": "Bol", "c": 1.0}, {"r": "D", "n": "CRISCITO", "s": "Gen", "c": 13.0}, {"r": "D", "n": "BIANDA", "s": "Rom", "c": 1.0}, {"r": "C", "n": "KHEDIRA", "s": "Juv", "c": 29.0}, {"r": "C", "n": "DE ROSSI", "s": "Rom", "c": 9.0}, {"r": "C", "n": "FREULER", "s": "Ata", "c": 0.0}, {"r": "C", "n": "LUKIC", "s": "Tor", "c": 0.0}, {"r": "C", "n": "CORIC", "s": "Rom", "c": 3.0}, {"r": "C", "n": "BENNACER", "s": "Emp", "c": 8.0}, {"r": "C", "n": "TRAORE' HJ", "s": "Emp", "c": 8.0}, {"r": "C", "n": "UNDER", "s": "Rom", "c": 46.0}, {"r": "A", "n": "PETAGNA", "s": "SPA", "c": 14.0}, {"r": "A", "n": "SANABRIA", "s": "Gen", "c": 28.0}, {"r": "A", "n": "FLOCCARI", "s": "SPA", "c": 2.0}, {"r": "A", "n": "EL SHAARAWY", "s": "Rom", "c": 15.0}, {"r": "A", "n": "ICARDI", "s": "Int", "c": 160.0}, {"r": "A", "n": "MARTINEZ L", "s": "Int", "c": 0.0}], "Vasilis Unitis": [{"r": "P", "n": "MIRANTE", "s": "Rom", "c": 1.0}, {"r": "P", "n": "SZCZESNY", "s": "Juv", "c": 29.0}, {"r": "P", "n": "OLSEN", "s": "Rom", "c": 19.0}, {"r": "D", "n": "CACCIATORE", "s": "Cag", "c": 7.0}, {"r": "D", "n": "IZZO", "s": "Tor", "c": 11.0}, {"r": "D", "n": "BIRAGHI", "s": "Fio", "c": 9.0}, {"r": "D", "n": "KOULIBALY", "s": "Nap", "c": 21.0}, {"r": "D", "n": "SAMIR", "s": "Udi", "c": 8.0}, {"r": "D", "n": "VICARI", "s": "SPA", "c": 7.0}, {"r": "D", "n": "PELLEGRINI LU", "s": "Cag", "c": 4.0}, {"r": "D", "n": "TROOST-EKONG", "s": "Udi", "c": 5.0}, {"r": "C", "n": "GORI", "s": "Fro", "c": 1.0}, {"r": "C", "n": "ALLAN", "s": "Nap", "c": 25.0}, {"r": "C", "n": "PERISIC", "s": "Int", "c": 60.0}, {"r": "C", "n": "KESSIE'", "s": "Mil", "c": 11.0}, {"r": "C", "n": "CHIESA", "s": "Fio", "c": 40.0}, {"r": "C", "n": "MEITE'", "s": "Tor", "c": 5.0}, {"r": "C", "n": "PAQUETA'", "s": "Mil", "c": 25.0}, {"r": "C", "n": "YOUNES", "s": "Nap", "c": 3.0}, {"r": "A", "n": "INSIGNE", "s": "Nap", "c": 51.0}, {"r": "A", "n": "DZEKO", "s": "Rom", "c": 110.0}, {"r": "A", "n": "FARIAS", "s": "Emp", "c": 15.0}, {"r": "A", "n": "SCHICK", "s": "Rom", "c": 19.0}, {"r": "A", "n": "STEPINSKI", "s": "Chi", "c": 20.0}, {"r": "A", "n": "CERRI", "s": "Cag", "c": 4.0}], "Poggibonsi": [{"r": "P", "n": "KARNEZIS", "s": "Nap", "c": 1.0}, {"r": "P", "n": "MERET", "s": "Nap", "c": 16.0}, {"r": "P", "n": "OSPINA", "s": "Nap", "c": 1.0}, {"r": "D", "n": "D'AMBROSIO", "s": "Int", "c": 8.0}, {"r": "D", "n": "BONUCCI", "s": "Juv", "c": 18.0}, {"r": "D", "n": "RUGANI", "s": "Juv", "c": 6.0}, {"r": "D", "n": "RADU", "s": "Laz", "c": 8.0}, {"r": "D", "n": "DE SCIGLIO", "s": "Juv", "c": 7.0}, {"r": "D", "n": "FAZIO", "s": "Rom", "c": 15.0}, {"r": "D", "n": "MILENKOVIC", "s": "Fio", "c": 14.0}, {"r": "D", "n": "CEDRIC SOARES", "s": "Int", "c": 7.0}, {"r": "C", "n": "SAPONARA", "s": "Sam", "c": 11.0}, {"r": "C", "n": "DUNCAN", "s": "Sas", "c": 9.0}, {"r": "C", "n": "BASELLI", "s": "Tor", "c": 11.0}, {"r": "C", "n": "BARELLA", "s": "Cag", "c": 15.0}, {"r": "C", "n": "MURGIA", "s": "SPA", "c": 1.0}, {"r": "C", "n": "PASALIC", "s": "Ata", "c": 11.0}, {"r": "C", "n": "LUIS ALBERTO", "s": "Laz", "c": 45.0}, {"r": "C", "n": "MATUIDI", "s": "Juv", "c": 15.0}, {"r": "A", "n": "GOMEZ A", "s": "Ata", "c": 40.0}, {"r": "A", "n": "BABACAR", "s": "Sas", "c": 26.0}, {"r": "A", "n": "CALLEJON", "s": "Nap", "c": 27.0}, {"r": "A", "n": "BERARDI", "s": "Sas", "c": 17.0}, {"r": "A", "n": "IMMOBILE", "s": "Laz", "c": 140.0}, {"r": "A", "n": "CUTRONE", "s": "Mil", "c": 16.0}]}, "2021/2022": {"Schiava Praha": [{"r": "P", "n": "Meret", "s": "Nap", "c": 35.0}, {"r": "P", "n": "Dragowski", "s": "Fio", "c": 24.0}, {"r": "P", "n": "Ospina", "s": "Nap", "c": 1.0}, {"r": "D", "n": "Izzo", "s": "Tor", "c": 8.0}, {"r": "D", "n": "Goldaniga", "s": "Cag", "c": 3.0}, {"r": "D", "n": "Skriniar", "s": "Int", "c": 26.0}, {"r": "D", "n": "Ceccherini", "s": "Ver", "c": 6.0}, {"r": "D", "n": "Marusic", "s": "Laz", "c": 5.0}, {"r": "D", "n": "Lazzari", "s": "Laz", "c": 26.0}, {"r": "D", "n": "Mancini", "s": "Rom", "c": 26.0}, {"r": "D", "n": "Djidji", "s": "Tor", "c": 2.0}, {"r": "C", "n": "Verre", "s": "Emp", "c": 4.0}, {"r": "C", "n": "Milinkovic-Savic", "s": "Laz", "c": 40.0}, {"r": "C", "n": "Cristante", "s": "Rom", "c": 9.0}, {"r": "C", "n": "Freuler", "s": "Ata", "c": 15.0}, {"r": "C", "n": "Torreira", "s": "Fio", "c": 9.0}, {"r": "C", "n": "Aramu", "s": "Ven", "c": 11.0}, {"r": "C", "n": "Frattesi", "s": "Sas", "c": 8.0}, {"r": "C", "n": "Koopmeiners", "s": "Ata", "c": 11.0}, {"r": "A", "n": "Insigne", "s": "Nap", "c": 57.0}, {"r": "A", "n": "Sanabria", "s": "Tor", "c": 20.0}, {"r": "A", "n": "El Shaarawy", "s": "Rom", "c": 12.0}, {"r": "A", "n": "Cutrone", "s": "Emp", "c": 11.0}, {"r": "A", "n": "Martinez L.", "s": "Int", "c": 121.0}, {"r": "A", "n": "Piccoli", "s": "Gen", "c": 7.0}], "Boca Figa": [{"r": "P", "n": "Sportiello", "s": "Ata", "c": 1.0}, {"r": "P", "n": "Rossi F.", "s": "Ata", "c": 1.0}, {"r": "P", "n": "Musso", "s": "Ata", "c": 33.0}, {"r": "D", "n": "Conti", "s": "Sam", "c": 1.0}, {"r": "D", "n": "De Silvestri", "s": "Bol", "c": 13.0}, {"r": "D", "n": "Zappacosta", "s": "Ata", "c": 16.0}, {"r": "D", "n": "Cuadrado", "s": "Juv", "c": 48.0}, {"r": "D", "n": "Djimsiti", "s": "Ata", "c": 6.0}, {"r": "D", "n": "Palomino", "s": "Ata", "c": 8.0}, {"r": "D", "n": "Vojvoda", "s": "Tor", "c": 9.0}, {"r": "D", "n": "Molina N.", "s": "Udi", "c": 19.0}, {"r": "C", "n": "De Roon", "s": "Ata", "c": 9.0}, {"r": "A", "n": "Felipe Anderson", "s": "Laz", "c": 19.0}, {"r": "C", "n": "Baselli", "s": "Cag", "c": 1.0}, {"r": "C", "n": "Lukic", "s": "Tor", "c": 13.0}, {"r": "C", "n": "Pasalic", "s": "Ata", "c": 18.0}, {"r": "C", "n": "Pessina", "s": "Ata", "c": 15.0}, {"r": "C", "n": "Malinovskyi", "s": "Ata", "c": 41.0}, {"r": "C", "n": "Bajrami", "s": "Emp", "c": 18.0}, {"r": "A", "n": "Falcinelli", "s": "Bol", "c": 1.0}, {"r": "C", "n": "Politano", "s": "Nap", "c": 39.0}, {"r": "A", "n": "Caprari", "s": "Ver", "c": 41.0}, {"r": "A", "n": "Vlahovic", "s": "Juv", "c": 120.0}, {"r": "A", "n": "Raspadori", "s": "Sas", "c": 32.0}, {"r": "A", "n": "Cancellieri", "s": "Ver", "c": 1.0}], "Vladigrado": [{"r": "P", "n": "Milinkovic-Savic V.", "s": "Tor", "c": 15.0}, {"r": "P", "n": "Fuzato", "s": "Rom", "c": 1.0}, {"r": "P", "n": "Rui Patricio", "s": "Rom", "c": 26.0}, {"r": "D", "n": "De Vrij", "s": "Int", "c": 19.0}, {"r": "D", "n": "De Sciglio", "s": "Juv", "c": 2.0}, {"r": "D", "n": "Faraoni", "s": "Ver", "c": 16.0}, {"r": "D", "n": "Veseli", "s": "Sal", "c": 1.0}, {"r": "D", "n": "Gosens", "s": "Int", "c": 54.0}, {"r": "D", "n": "Smalling", "s": "Rom", "c": 11.0}, {"r": "D", "n": "Demiral", "s": "Ata", "c": 10.0}, {"r": "D", "n": "Kyriakopoulos", "s": "Sas", "c": 7.0}, {"r": "C", "n": "Sturaro", "s": "Gen", "c": 3.0}, {"r": "C", "n": "Candreva", "s": "Sam", "c": 22.0}, {"r": "C", "n": "Viola", "s": "Bol", "c": 1.0}, {"r": "C", "n": "Pellegrini Lo.", "s": "Rom", "c": 39.0}, {"r": "C", "n": "Barella", "s": "Int", "c": 23.0}, {"r": "C", "n": "Zakaria", "s": "Juv", "c": 16.0}, {"r": "C", "n": "Soriano", "s": "Bol", "c": 23.0}, {"r": "C", "n": "Pobega", "s": "Tor", "c": 22.0}, {"r": "A", "n": "Mertens", "s": "Nap", "c": 26.0}, {"r": "A", "n": "Belotti", "s": "Tor", "c": 63.0}, {"r": "A", "n": "Berardi", "s": "Sas", "c": 47.0}, {"r": "A", "n": "Joao Pedro", "s": "Cag", "c": 66.0}, {"r": "A", "n": "Rafael Leao", "s": "Mil", "c": 17.0}, {"r": "A", "n": "Warming", "s": "Tor", "c": 1.0}], "SC Oreggio": [{"r": "P", "n": "Audero", "s": "Sam", "c": 12.0}, {"r": "P", "n": "Cragno", "s": "Cag", "c": 22.0}, {"r": "P", "n": "Sirigu", "s": "Gen", "c": 7.0}, {"r": "D", "n": "Mario Rui", "s": "Nap", "c": 6.0}, {"r": "D", "n": "Biraghi", "s": "Fio", "c": 14.0}, {"r": "D", "n": "Dalbert", "s": "Cag", "c": 8.0}, {"r": "D", "n": "Criscito", "s": "Gen", "c": 7.0}, {"r": "D", "n": "De Ligt", "s": "Juv", "c": 15.0}, {"r": "D", "n": "Singo", "s": "Tor", "c": 17.0}, {"r": "D", "n": "Kechrida", "s": "Sal", "c": 2.0}, {"r": "D", "n": "Cambiaso", "s": "Gen", "c": 11.0}, {"r": "C", "n": "Brozovic", "s": "Int", "c": 14.0}, {"r": "C", "n": "Perisic", "s": "Int", "c": 24.0}, {"r": "C", "n": "Veretout", "s": "Rom", "c": 21.0}, {"r": "C", "n": "Svanberg", "s": "Bol", "c": 11.0}, {"r": "C", "n": "Ruiz", "s": "Nap", "c": 26.0}, {"r": "C", "n": "Saelemaekers", "s": "Mil", "c": 11.0}, {"r": "C", "n": "Marin", "s": "Cag", "c": 12.0}, {"r": "C", "n": "Ilic", "s": "Ver", "c": 10.0}, {"r": "A", "n": "Rebic", "s": "Mil", "c": 13.0}, {"r": "A", "n": "Dybala", "s": "Juv", "c": 51.0}, {"r": "A", "n": "Morata", "s": "Juv", "c": 59.0}, {"r": "A", "n": "Deulofeu", "s": "Udi", "c": 13.0}, {"r": "A", "n": "Abraham", "s": "Rom", "c": 104.0}, {"r": "A", "n": "Barrow", "s": "Bol", "c": 17.0}], "Team Onto": [{"r": "P", "n": "Perin", "s": "Juv", "c": 1.0}, {"r": "P", "n": "Szczesny", "s": "Juv", "c": 38.0}, {"r": "P", "n": "Consigli", "s": "Sas", "c": 12.0}, {"r": "D", "n": "Maksimovic", "s": "Gen", "c": 1.0}, {"r": "D", "n": "Karsdorp", "s": "Rom", "c": 21.0}, {"r": "D", "n": "Odriozola", "s": "Fio", "c": 10.0}, {"r": "D", "n": "Maitland-Niles", "s": "Rom", "c": 6.0}, {"r": "D", "n": "Hernandez T.", "s": "Mil", "c": 51.0}, {"r": "D", "n": "Ibanez", "s": "Rom", "c": 8.0}, {"r": "D", "n": "Ballo-Toure'", "s": "Mil", "c": 4.0}, {"r": "D", "n": "Dumfries", "s": "Int", "c": 19.0}, {"r": "C", "n": "Lazovic", "s": "Ver", "c": 15.0}, {"r": "C", "n": "Pereyra", "s": "Udi", "c": 11.0}, {"r": "C", "n": "Bonaventura", "s": "Fio", "c": 11.0}, {"r": "C", "n": "Djuricic", "s": "Sas", "c": 20.0}, {"r": "C", "n": "Zaniolo", "s": "Rom", "c": 36.0}, {"r": "C", "n": "Zurkowski", "s": "Emp", "c": 17.0}, {"r": "C", "n": "Lopez M.", "s": "Sas", "c": 9.0}, {"r": "C", "n": "Busio", "s": "Ven", "c": 11.0}, {"r": "A", "n": "Piatek", "s": "Fio", "c": 17.0}, {"r": "A", "n": "Osimhen", "s": "Nap", "c": 111.0}, {"r": "A", "n": "Gyasi", "s": "Spe", "c": 10.0}, {"r": "A", "n": "Henry", "s": "Ven", "c": 12.0}, {"r": "A", "n": "Afena-Gyan", "s": "Rom", "c": 9.0}, {"r": "A", "n": "Cabral", "s": "Fio", "c": 28.0}], "So Lille": [{"r": "P", "n": "Mirante", "s": "Mil", "c": 1.0}, {"r": "P", "n": "Tatarusanu", "s": "Mil", "c": 1.0}, {"r": "P", "n": "Maignan", "s": "Mil", "c": 32.0}, {"r": "D", "n": "Bonucci", "s": "Juv", "c": 12.0}, {"r": "D", "n": "Romagnoli", "s": "Mil", "c": 6.0}, {"r": "D", "n": "Acerbi", "s": "Laz", "c": 16.0}, {"r": "D", "n": "Bastoni", "s": "Int", "c": 12.0}, {"r": "D", "n": "Milenkovic", "s": "Fio", "c": 15.0}, {"r": "D", "n": "Darmian", "s": "Int", "c": 10.0}, {"r": "D", "n": "Pellegrini Lu.", "s": "Juv", "c": 5.0}, {"r": "D", "n": "Altare", "s": "Cag", "c": 2.0}, {"r": "C", "n": "Luis Alberto", "s": "Laz", "c": 54.0}, {"r": "C", "n": "Barak", "s": "Ver", "c": 19.0}, {"r": "C", "n": "Calhanoglu", "s": "Int", "c": 35.0}, {"r": "C", "n": "Elmas", "s": "Nap", "c": 8.0}, {"r": "C", "n": "Ikone'", "s": "Fio", "c": 25.0}, {"r": "C", "n": "Diaz B.", "s": "Mil", "c": 18.0}, {"r": "C", "n": "Messias", "s": "Mil", "c": 11.0}, {"r": "C", "n": "Mckennie", "s": "Juv", "c": 15.0}, {"r": "A", "n": "Destro", "s": "Gen", "c": 37.0}, {"r": "A", "n": "Pinamonti", "s": "Emp", "c": 24.0}, {"r": "A", "n": "Ibrahimovic", "s": "Mil", "c": 41.0}, {"r": "A", "n": "Caputo", "s": "Sam", "c": 32.0}, {"r": "A", "n": "Boga", "s": "Ata", "c": 17.0}, {"r": "A", "n": "Giroud", "s": "Mil", "c": 25.0}], "Amario Lucano": [{"r": "P", "n": "Reina", "s": "Laz", "c": 23.0}, {"r": "P", "n": "Strakosha", "s": "Laz", "c": 3.0}, {"r": "P", "n": "Adamonis", "s": "Laz", "c": 1.0}, {"r": "D", "n": "Dimarco", "s": "Int", "c": 8.0}, {"r": "D", "n": "Calabria", "s": "Mil", "c": 12.0}, {"r": "D", "n": "Bremer", "s": "Tor", "c": 19.0}, {"r": "D", "n": "Di Lorenzo", "s": "Nap", "c": 15.0}, {"r": "D", "n": "Tomori", "s": "Mil", "c": 16.0}, {"r": "D", "n": "Lovato", "s": "Cag", "c": 2.0}, {"r": "D", "n": "Ruggeri", "s": "Sal", "c": 4.0}, {"r": "D", "n": "Casale", "s": "Ver", "c": 9.0}, {"r": "C", "n": "Benassi", "s": "Emp", "c": 1.0}, {"r": "C", "n": "Zaccagni", "s": "Laz", "c": 20.0}, {"r": "C", "n": "Locatelli", "s": "Juv", "c": 16.0}, {"r": "C", "n": "Kessie'", "s": "Mil", "c": 27.0}, {"r": "C", "n": "Zambo Anguissa", "s": "Nap", "c": 11.0}, {"r": "C", "n": "Tonali", "s": "Mil", "c": 7.0}, {"r": "C", "n": "Amiri", "s": "Gen", "c": 17.0}, {"r": "C", "n": "Oliveira", "s": "Rom", "c": 15.0}, {"r": "A", "n": "Immobile", "s": "Laz", "c": 146.0}, {"r": "A", "n": "Simeone", "s": "Ver", "c": 34.0}, {"r": "A", "n": "Nani", "s": "Ven", "c": 12.0}, {"r": "A", "n": "Pedro", "s": "Laz", "c": 13.0}, {"r": "A", "n": "Arnautovic", "s": "Bol", "c": 24.0}, {"r": "A", "n": "Jovane", "s": "Laz", "c": 9.0}], "Politehnica Gyasi": [{"r": "P", "n": "Handanovic", "s": "Int", "c": 38.0}, {"r": "P", "n": "Radu I.", "s": "Int", "c": 3.0}, {"r": "P", "n": "Cordaz", "s": "Int", "c": 1.0}, {"r": "D", "n": "Koulibaly", "s": "Nap", "c": 16.0}, {"r": "D", "n": "Florenzi", "s": "Mil", "c": 13.0}, {"r": "D", "n": "Toloi", "s": "Ata", "c": 12.0}, {"r": "D", "n": "Hateboer", "s": "Ata", "c": 13.0}, {"r": "D", "n": "Bastoni S.", "s": "Spe", "c": 8.0}, {"r": "D", "n": "Maehle", "s": "Ata", "c": 19.0}, {"r": "D", "n": "Stojanovic", "s": "Emp", "c": 8.0}, {"r": "D", "n": "Cacace", "s": "Emp", "c": 2.0}, {"r": "C", "n": "Zielinski", "s": "Nap", "c": 40.0}, {"r": "C", "n": "Perotti", "s": "Sal", "c": 9.0}, {"r": "C", "n": "Verdi", "s": "Sal", "c": 5.0}, {"r": "C", "n": "Sensi", "s": "Sam", "c": 5.0}, {"r": "C", "n": "Miguel Veloso", "s": "Ver", "c": 7.0}, {"r": "C", "n": "Mkhitaryan", "s": "Rom", "c": 68.0}, {"r": "C", "n": "Damsgaard", "s": "Sam", "c": 17.0}, {"r": "C", "n": "Kovalenko", "s": "Spe", "c": 9.0}, {"r": "A", "n": "Muriel", "s": "Ata", "c": 122.0}, {"r": "A", "n": "Dzeko", "s": "Int", "c": 51.0}, {"r": "A", "n": "Scamacca", "s": "Sas", "c": 13.0}, {"r": "A", "n": "Caicedo", "s": "Int", "c": 12.0}, {"r": "A", "n": "Beto", "s": "Udi", "c": 23.0}, {"r": "A", "n": "Nsame", "s": "Ven", "c": 12.0}]}, "2022/2023": {"Polisportiva Infortuni Muscolari": [{"r": "P", "n": "Ujkani", "s": "Emp", "c": 1.0}, {"r": "P", "n": "Musso", "s": "Ata", "c": 14.0}, {"r": "P", "n": "Vicario", "s": "Emp", "c": 16.0}, {"r": "D", "n": "Bastoni", "s": "Int", "c": 9.0}, {"r": "D", "n": "Sernicola", "s": "Cre", "c": 10.0}, {"r": "D", "n": "Rrahmani", "s": "Nap", "c": 14.0}, {"r": "D", "n": "Tomori", "s": "Mil", "c": 21.0}, {"r": "D", "n": "Maehle", "s": "Ata", "c": 12.0}, {"r": "D", "n": "Parisi", "s": "Emp", "c": 9.0}, {"r": "D", "n": "Cacace", "s": "Emp", "c": 2.0}, {"r": "D", "n": "Doig", "s": "Ver", "c": 18.0}, {"r": "C", "n": "Pereyra", "s": "Udi", "c": 18.0}, {"r": "C", "n": "Pellegrini Lo.", "s": "Rom", "c": 0.0}, {"r": "C", "n": "Barella", "s": "Int", "c": 26.0}, {"r": "A", "n": "Orsolini", "s": "Bol", "c": 15.0}, {"r": "C", "n": "Fagioli", "s": "Juv", "c": 12.0}, {"r": "C", "n": "Vlasic", "s": "Tor", "c": 17.0}, {"r": "C", "n": "Baldanzi", "s": "Emp", "c": 4.0}, {"r": "C", "n": "Hjulmand", "s": "Lec", "c": 6.0}, {"r": "C", "n": "Ilkhan", "s": "Sam", "c": 1.0}, {"r": "A", "n": "Dybala", "s": "Rom", "c": 52.0}, {"r": "A", "n": "Osimhen", "s": "Nap", "c": 126.0}, {"r": "A", "n": "Dia", "s": "Sal", "c": 19.0}, {"r": "A", "n": "Lauriente'", "s": "Sas", "c": 17.0}, {"r": "A", "n": "Ngonge", "s": "Ver", "c": 3.0}], "Boca Figa": [{"r": "P", "n": "Meret", "s": "Nap", "c": 17.0}, {"r": "P", "n": "Gollini", "s": "Nap", "c": 2.0}, {"r": "P", "n": "Marfella", "s": "Nap", "c": 1.0}, {"r": "D", "n": "Murillo", "s": "Sam", "c": 1.0}, {"r": "D", "n": "Ferrari G.", "s": "Sas", "c": 4.0}, {"r": "D", "n": "Marusic", "s": "Laz", "c": 7.0}, {"r": "D", "n": "Nuytinck", "s": "Sam", "c": 4.0}, {"r": "D", "n": "Hernandez T.", "s": "Mil", "c": 39.0}, {"r": "D", "n": "Rodrigo Becao", "s": "Udi", "c": 12.0}, {"r": "D", "n": "Dumfries", "s": "Int", "c": 38.0}, {"r": "D", "n": "Thiaw", "s": "Mil", "c": 6.0}, {"r": "C", "n": "Lazovic", "s": "Ver", "c": 15.0}, {"r": "C", "n": "Zaccagni", "s": "Laz", "c": 40.0}, {"r": "C", "n": "Zurkowski", "s": "Spe", "c": 1.0}, {"r": "C", "n": "Tameze", "s": "Ver", "c": 6.0}, {"r": "C", "n": "Zalewski", "s": "Rom", "c": 9.0}, {"r": "C", "n": "Yepes", "s": "Sam", "c": 1.0}, {"r": "C", "n": "Koopmeiners", "s": "Ata", "c": 26.0}, {"r": "C", "n": "Ferguson", "s": "Bol", "c": 16.0}, {"r": "A", "n": "Martinez L.", "s": "Int", "c": 137.0}, {"r": "A", "n": "Boga", "s": "Ata", "c": 61.0}, {"r": "A", "n": "Lookman", "s": "Ata", "c": 39.0}, {"r": "A", "n": "Shomurodov", "s": "Spe", "c": 3.0}, {"r": "A", "n": "Braaf", "s": "Ver", "c": 1.0}, {"r": "A", "n": "Montevago", "s": "Sam", "c": 1.0}], "Vladigrado": [], "SC Oreggio": [], "Team Onto": [{"r": "P", "n": "Rui Patricio", "s": "Rom", "c": 15.0}, {"r": "P", "n": "Boer", "s": "Rom", "c": 1.0}, {"r": "P", "n": "Svilar", "s": "Rom", "c": 1.0}, {"r": "D", "n": "Biraghi", "s": "Fio", "c": 22.0}, {"r": "D", "n": "Romagnoli", "s": "Laz", "c": 0.0}, {"r": "D", "n": "Troost-Ekong", "s": "Sal", "c": 5.0}, {"r": "D", "n": "Smalling", "s": "Rom", "c": 20.0}, {"r": "D", "n": "Ibanez", "s": "Rom", "c": 15.0}, {"r": "D", "n": "Bastoni S.", "s": "Spe", "c": 12.0}, {"r": "D", "n": "Baschirotto", "s": "Lec", "c": 2.0}, {"r": "D", "n": "Posch", "s": "Bol", "c": 16.0}, {"r": "C", "n": "Cataldi", "s": "Laz", "c": 7.0}, {"r": "C", "n": "Bonaventura", "s": "Fio", "c": 21.0}, {"r": "C", "n": "Cuadrado", "s": "Juv", "c": 5.0}, {"r": "A", "n": "El Shaarawy", "s": "Rom", "c": 10.0}, {"r": "C", "n": "Zambo Anguissa", "s": "Nap", "c": 12.0}, {"r": "C", "n": "Kvaratskhelia", "s": "Nap", "c": 68.0}, {"r": "C", "n": "Thorstvedt", "s": "Sas", "c": 9.0}, {"r": "C", "n": "Lovric", "s": "Udi", "c": 16.0}, {"r": "C", "n": "Pickel", "s": "Cre", "c": 4.0}, {"r": "A", "n": "Belotti", "s": "Rom", "c": 7.0}, {"r": "A", "n": "Abraham", "s": "Rom", "c": 142.0}, {"r": "A", "n": "Caputo", "s": "Emp", "c": 0.0}, {"r": "A", "n": "Beto", "s": "Udi", "c": 24.0}, {"r": "A", "n": "Dessers", "s": "Cre", "c": 0.0}], "So Lille": [{"r": "P", "n": "Handanovic", "s": "Int", "c": 40.0}, {"r": "P", "n": "Cordaz", "s": "Int", "c": 1.0}, {"r": "P", "n": "Onana", "s": "Int", "c": 1.0}, {"r": "D", "n": "Dimarco", "s": "Int", "c": 9.0}, {"r": "D", "n": "Calabria", "s": "Mil", "c": 17.0}, {"r": "D", "n": "Milenkovic", "s": "Fio", "c": 12.0}, {"r": "D", "n": "Lazzari", "s": "Laz", "c": 19.0}, {"r": "D", "n": "Di Lorenzo", "s": "Nap", "c": 15.0}, {"r": "D", "n": "Adopo", "s": "Tor", "c": 1.0}, {"r": "D", "n": "Soppy", "s": "Ata", "c": 6.0}, {"r": "D", "n": "Valeri", "s": "Cre", "c": 8.0}, {"r": "A", "n": "Chiesa", "s": "Juv", "c": 25.0}, {"r": "C", "n": "Barak", "s": "Fio", "c": 21.0}, {"r": "C", "n": "Rabiot", "s": "Juv", "c": 16.0}, {"r": "C", "n": "Frattesi", "s": "Sas", "c": 16.0}, {"r": "C", "n": "Lobotka", "s": "Nap", "c": 13.0}, {"r": "C", "n": "Castrovilli", "s": "Fio", "c": 2.0}, {"r": "C", "n": "Kostic", "s": "Juv", "c": 31.0}, {"r": "C", "n": "Diaz B.", "s": "Mil", "c": 12.0}, {"r": "C", "n": "D'andrea", "s": "Sas", "c": 3.0}, {"r": "A", "n": "Lasagna", "s": "Ver", "c": 8.0}, {"r": "A", "n": "Di Maria", "s": "Juv", "c": 15.0}, {"r": "A", "n": "Pedro", "s": "Laz", "c": 23.0}, {"r": "A", "n": "Vlahovic", "s": "Juv", "c": 120.0}, {"r": "A", "n": "Giroud", "s": "Mil", "c": 27.0}], "Iqos Euroma2": [{"r": "P", "n": "Provedel", "s": "Laz", "c": 8.0}, {"r": "P", "n": "Adamonis", "s": "Laz", "c": 1.0}, {"r": "P", "n": "Luis Maximiano", "s": "Laz", "c": 14.0}, {"r": "D", "n": "Mario Rui", "s": "Nap", "c": 9.0}, {"r": "D", "n": "Chiriches", "s": "Cre", "c": 2.0}, {"r": "D", "n": "Darmian", "s": "Int", "c": 11.0}, {"r": "D", "n": "Danilo", "s": "Juv", "c": 13.0}, {"r": "D", "n": "Scalvini", "s": "Ata", "c": 13.0}, {"r": "D", "n": "Dodo'", "s": "Fio", "c": 7.0}, {"r": "D", "n": "Cabal", "s": "Ver", "c": 1.0}, {"r": "D", "n": "Moutinho J.", "s": "Spe", "c": 2.0}, {"r": "C", "n": "Brozovic", "s": "Int", "c": 17.0}, {"r": "A", "n": "Felipe Anderson", "s": "Laz", "c": 18.0}, {"r": "A", "n": "Politano", "s": "Nap", "c": 20.0}, {"r": "C", "n": "Benassi", "s": "Cre", "c": 3.0}, {"r": "C", "n": "Calhanoglu", "s": "Int", "c": 33.0}, {"r": "C", "n": "Matic", "s": "Rom", "c": 12.0}, {"r": "C", "n": "Pessina", "s": "Mon", "c": 16.0}, {"r": "C", "n": "Tonali", "s": "Mil", "c": 15.0}, {"r": "C", "n": "Marin", "s": "Emp", "c": 9.0}, {"r": "C", "n": "Samardzic", "s": "Udi", "c": 21.0}, {"r": "A", "n": "Lukaku", "s": "Int", "c": 142.0}, {"r": "A", "n": "Gonzalez N.", "s": "Fio", "c": 20.0}, {"r": "A", "n": "Lozano", "s": "Nap", "c": 20.0}, {"r": "A", "n": "Okereke", "s": "Cre", "c": 15.0}], "IstikLOL Dushanbe": [{"r": "P", "n": "Mirante", "s": "Mil", "c": 1.0}, {"r": "P", "n": "Tatarusanu", "s": "Mil", "c": 1.0}, {"r": "P", "n": "Maignan", "s": "Mil", "c": 46.0}, {"r": "D", "n": "Gosens", "s": "Int", "c": 21.0}, {"r": "D", "n": "Palomino", "s": "Ata", "c": 5.0}, {"r": "D", "n": "Gunter", "s": "Sam", "c": 7.0}, {"r": "D", "n": "Bremer", "s": "Juv", "c": 18.0}, {"r": "D", "n": "Djidji", "s": "Tor", "c": 6.0}, {"r": "D", "n": "Gallo", "s": "Lec", "c": 2.0}, {"r": "D", "n": "Vojvoda", "s": "Tor", "c": 8.0}, {"r": "D", "n": "Casale", "s": "Laz", "c": 8.0}, {"r": "C", "n": "De Roon", "s": "Ata", "c": 8.0}, {"r": "C", "n": "Vecino", "s": "Laz", "c": 6.0}, {"r": "C", "n": "Luis Alberto", "s": "Laz", "c": 25.0}, {"r": "C", "n": "Wijnaldum", "s": "Rom", "c": 15.0}, {"r": "C", "n": "Ikone'", "s": "Fio", "c": 15.0}, {"r": "C", "n": "Miranchuk", "s": "Tor", "c": 9.0}, {"r": "C", "n": "Bajrami", "s": "Sas", "c": 18.0}, {"r": "C", "n": "Ricci S.", "s": "Tor", "c": 12.0}, {"r": "A", "n": "Berardi", "s": "Sas", "c": 90.0}, {"r": "A", "n": "Dzeko", "s": "Int", "c": 16.0}, {"r": "A", "n": "Caprari", "s": "Mon", "c": 20.0}, {"r": "A", "n": "Milik", "s": "Juv", "c": 22.0}, {"r": "A", "n": "Origi", "s": "Mil", "c": 17.0}, {"r": "A", "n": "Arnautovic", "s": "Bol", "c": 70.0}], "Schiava Praha": [{"r": "P", "n": "Perin", "s": "Juv", "c": 4.0}, {"r": "P", "n": "Szczesny", "s": "Juv", "c": 39.0}, {"r": "P", "n": "Milinkovic-Savic V.", "s": "Tor", "c": 3.0}, {"r": "D", "n": "Bonucci", "s": "Juv", "c": 15.0}, {"r": "D", "n": "Toloi", "s": "Ata", "c": 9.0}, {"r": "D", "n": "Spinazzola", "s": "Rom", "c": 16.0}, {"r": "D", "n": "Mancini", "s": "Rom", "c": 11.0}, {"r": "D", "n": "Igor", "s": "Fio", "c": 9.0}, {"r": "D", "n": "Lovato", "s": "Sal", "c": 6.0}, {"r": "D", "n": "Udogie", "s": "Udi", "c": 25.0}, {"r": "D", "n": "Kim", "s": "Nap", "c": 14.0}, {"r": "C", "n": "Zielinski", "s": "Nap", "c": 34.0}, {"r": "C", "n": "Milinkovic-Savic", "s": "Laz", "c": 67.0}, {"r": "C", "n": "Locatelli", "s": "Juv", "c": 14.0}, {"r": "C", "n": "Djuricic", "s": "Sam", "c": 12.0}, {"r": "C", "n": "Ndombele'", "s": "Nap", "c": 11.0}, {"r": "C", "n": "Strefezza", "s": "Lec", "c": 21.0}, {"r": "C", "n": "Maggiore", "s": "Sal", "c": 10.0}, {"r": "C", "n": "Miretti", "s": "Juv", "c": 3.0}, {"r": "A", "n": "Muriel", "s": "Ata", "c": 27.0}, {"r": "A", "n": "Simeone", "s": "Nap", "c": 20.0}, {"r": "A", "n": "Ribery *", "s": "Sal", "c": 5.0}, {"r": "A", "n": "Jovic", "s": "Fio", "c": 28.0}, {"r": "A", "n": "Rafael Leao", "s": "Mil", "c": 68.0}, {"r": "A", "n": "Nzola", "s": "Spe", "c": 18.0}]}, "2023/2024": {"Polisportiva Calitri": [{"r": "P", "n": "Sepe", "s": "Laz", "c": 1.0}, {"r": "P", "n": "Provedel", "s": "Laz", "c": 30.0}, {"r": "P", "n": "Mandas", "s": "Laz", "c": 1.0}, {"r": "D", "n": "Luperto", "s": "Emp", "c": 9.0}, {"r": "D", "n": "Mancini", "s": "Rom", "c": 10.0}, {"r": "D", "n": "Pavard", "s": "Int", "c": 18.0}, {"r": "D", "n": "Toljan", "s": "Sas", "c": 11.0}, {"r": "D", "n": "Calafiori", "s": "Bol", "c": 11.0}, {"r": "D", "n": "Martinez Quarta", "s": "Fio", "c": 17.0}, {"r": "D", "n": "Scalvini", "s": "Ata", "c": 0.0}, {"r": "D", "n": "Gatti", "s": "Juv", "c": 13.0}, {"r": "C", "n": "Bonaventura", "s": "Fio", "c": 19.0}, {"r": "C", "n": "Viola", "s": "Cag", "c": 16.0}, {"r": "C", "n": "Malinovskyi", "s": "Gen", "c": 17.0}, {"r": "C", "n": "Vlasic", "s": "Tor", "c": 17.0}, {"r": "C", "n": "Thorstvedt", "s": "Sas", "c": 6.0}, {"r": "C", "n": "De Ketelaere", "s": "Ata", "c": 30.0}, {"r": "C", "n": "Carboni V.", "s": "Mon", "c": 16.0}, {"r": "C", "n": "Suslov", "s": "Ver", "c": 18.0}, {"r": "A", "n": "Lukaku", "s": "Rom", "c": 111.0}, {"r": "A", "n": "Gonzalez N.", "s": "Fio", "c": 30.0}, {"r": "A", "n": "Azmoun", "s": "Rom", "c": 10.0}, {"r": "A", "n": "Kvaratskhelia", "s": "Nap", "c": 71.0}, {"r": "A", "n": "Retegui", "s": "Gen", "c": 30.0}, {"r": "A", "n": "Isaksen", "s": "Laz", "c": 8.0}], "Boca Figa": [{"r": "P", "n": "Perin", "s": "Juv", "c": 2.0}, {"r": "P", "n": "Szczesny", "s": "Juv", "c": 40.0}, {"r": "P", "n": "Pinsoglio", "s": "Juv", "c": 1.0}, {"r": "D", "n": "Izzo", "s": "Mon", "c": 1.0}, {"r": "D", "n": "Calabria", "s": "Mil", "c": 10.0}, {"r": "D", "n": "Zappacosta", "s": "Ata", "c": 21.0}, {"r": "D", "n": "Faraoni", "s": "Fio", "c": 5.0}, {"r": "D", "n": "Marusic", "s": "Laz", "c": 10.0}, {"r": "D", "n": "Kalulu", "s": "Mil", "c": 1.0}, {"r": "D", "n": "Llorente D.", "s": "Rom", "c": 8.0}, {"r": "D", "n": "Cambiaso", "s": "Juv", "c": 13.0}, {"r": "C", "n": "Pereyra", "s": "Udi", "c": 20.0}, {"r": "C", "n": "Locatelli", "s": "Juv", "c": 10.0}, {"r": "C", "n": "Vignato", "s": "Sal", "c": 1.0}, {"r": "C", "n": "Loftus-Cheek", "s": "Mil", "c": 20.0}, {"r": "C", "n": "Kostic", "s": "Juv", "c": 29.0}, {"r": "C", "n": "Harroui", "s": "Fro", "c": 10.0}, {"r": "C", "n": "Lovric", "s": "Udi", "c": 19.0}, {"r": "C", "n": "Ciurria", "s": "Mon", "c": 36.0}, {"r": "A", "n": "Simy", "s": "Sal", "c": 4.0}, {"r": "A", "n": "Milik", "s": "Juv", "c": 14.0}, {"r": "A", "n": "Jovic", "s": "Mil", "c": 31.0}, {"r": "A", "n": "Martinez L.", "s": "Int", "c": 140.0}, {"r": "A", "n": "Lauriente'", "s": "Sas", "c": 41.0}, {"r": "A", "n": "Okafor", "s": "Mil", "c": 16.0}], "Vladigrado": [{"r": "P", "n": "Audero", "s": "Int", "c": 1.0}, {"r": "P", "n": "Di Gennaro", "s": "Int", "c": 1.0}, {"r": "P", "n": "Sommer", "s": "Int", "c": 45.0}, {"r": "D", "n": "De Vrij", "s": "Int", "c": 10.0}, {"r": "D", "n": "Acerbi", "s": "Int", "c": 16.0}, {"r": "D", "n": "Karsdorp", "s": "Rom", "c": 9.0}, {"r": "D", "n": "Di Lorenzo", "s": "Nap", "c": 30.0}, {"r": "D", "n": "Danilo", "s": "Juv", "c": 15.0}, {"r": "D", "n": "Holm", "s": "Ata", "c": 8.0}, {"r": "D", "n": "Kristensen", "s": "Rom", "c": 7.0}, {"r": "D", "n": "Huijsen", "s": "Rom", "c": 7.0}, {"r": "C", "n": "Badelj", "s": "Gen", "c": 5.0}, {"r": "C", "n": "Duncan", "s": "Fio", "c": 15.0}, {"r": "C", "n": "Barella", "s": "Int", "c": 36.0}, {"r": "C", "n": "Frattesi", "s": "Int", "c": 34.0}, {"r": "C", "n": "Ikone'", "s": "Fio", "c": 10.0}, {"r": "C", "n": "Maggiore", "s": "Sal", "c": 3.0}, {"r": "C", "n": "Miranchuk", "s": "Ata", "c": 8.0}, {"r": "C", "n": "Prati", "s": "Cag", "c": 5.0}, {"r": "A", "n": "Arnautovic", "s": "Int", "c": 23.0}, {"r": "A", "n": "Rafael Leao", "s": "Mil", "c": 109.0}, {"r": "A", "n": "Djuric", "s": "Mon", "c": 19.0}, {"r": "A", "n": "Dia", "s": "Sal", "c": 26.0}, {"r": "A", "n": "Kvernadze", "s": "Fro", "c": 1.0}, {"r": "A", "n": "Castellanos", "s": "Laz", "c": 21.0}], "Inceltic": [{"r": "P", "n": "Silvestri", "s": "Udi", "c": 8.0}, {"r": "P", "n": "Carnesecchi", "s": "Ata", "c": 10.0}, {"r": "P", "n": "Montipo'", "s": "Ver", "c": 8.0}, {"r": "D", "n": "Patric", "s": "Laz", "c": 4.0}, {"r": "D", "n": "Kolasinac", "s": "Ata", "c": 10.0}, {"r": "D", "n": "Rrahmani", "s": "Nap", "c": 12.0}, {"r": "D", "n": "Monterisi", "s": "Fro", "c": 4.0}, {"r": "D", "n": "Ruggeri", "s": "Ata", "c": 5.0}, {"r": "D", "n": "Mazzocchi", "s": "Nap", "c": 17.0}, {"r": "D", "n": "Kamara H.", "s": "Udi", "c": 7.0}, {"r": "D", "n": "Gendrey", "s": "Lec", "c": 9.0}, {"r": "A", "n": "Zaccagni", "s": "Laz", "c": 33.0}, {"r": "C", "n": "Freuler", "s": "Bol", "c": 7.0}, {"r": "C", "n": "Guendouzi", "s": "Laz", "c": 17.0}, {"r": "C", "n": "Saelemaekers", "s": "Bol", "c": 6.0}, {"r": "C", "n": "Ilic", "s": "Tor", "c": 14.0}, {"r": "C", "n": "Bove", "s": "Rom", "c": 10.0}, {"r": "C", "n": "Koopmeiners", "s": "Ata", "c": 47.0}, {"r": "C", "n": "Frendrup", "s": "Gen", "c": 6.0}, {"r": "C", "n": "Oudin", "s": "Lec", "c": 18.0}, {"r": "A", "n": "Belotti", "s": "Fio", "c": 15.0}, {"r": "A", "n": "Pinamonti", "s": "Sas", "c": 12.0}, {"r": "A", "n": "Osimhen", "s": "Nap", "c": 141.0}, {"r": "A", "n": "Lookman", "s": "Ata", "c": 61.0}, {"r": "A", "n": "Zirkzee", "s": "Bol", "c": 26.0}], "Team Onto": [{"r": "P", "n": "Sportiello", "s": "Mil", "c": 1.0}, {"r": "P", "n": "Falcone", "s": "Lec", "c": 8.0}, {"r": "P", "n": "Maignan", "s": "Mil", "c": 59.0}, {"r": "D", "n": "Biraghi", "s": "Fio", "c": 0.0}, {"r": "D", "n": "Toloi", "s": "Ata", "c": 8.0}, {"r": "D", "n": "Ranieri L.", "s": "Fio", "c": 6.0}, {"r": "D", "n": "Okoli", "s": "Fro", "c": 2.0}, {"r": "D", "n": "Angelino", "s": "Rom", "c": 37.0}, {"r": "D", "n": "Bellanova", "s": "Tor", "c": 30.0}, {"r": "D", "n": "Dumfries", "s": "Int", "c": 21.0}, {"r": "D", "n": "Oyono", "s": "Fro", "c": 4.0}, {"r": "C", "n": "Zielinski", "s": "Nap", "c": 30.0}, {"r": "C", "n": "El Shaarawy", "s": "Rom", "c": 17.0}, {"r": "C", "n": "Calhanoglu", "s": "Int", "c": 30.0}, {"r": "C", "n": "Rabiot", "s": "Juv", "c": 30.0}, {"r": "C", "n": "Mkhitaryan", "s": "Int", "c": 13.0}, {"r": "C", "n": "Aouar", "s": "Rom", "c": 16.0}, {"r": "C", "n": "Klaassen", "s": "Int", "c": 2.0}, {"r": "C", "n": "Pisilli", "s": "Rom", "c": 1.0}, {"r": "A", "n": "Dybala", "s": "Rom", "c": 57.0}, {"r": "A", "n": "Sanabria", "s": "Tor", "c": 23.0}, {"r": "A", "n": "Zapata D.", "s": "Tor", "c": 40.0}, {"r": "A", "n": "Chiesa", "s": "Juv", "c": 53.0}, {"r": "A", "n": "Banda", "s": "Lec", "c": 10.0}, {"r": "A", "n": "Lucca", "s": "Udi", "c": 11.0}], "So Lille": [{"r": "P", "n": "Meret", "s": "Nap", "c": 19.0}, {"r": "P", "n": "Gollini", "s": "Nap", "c": 1.0}, {"r": "P", "n": "Contini", "s": "Nap", "c": 1.0}, {"r": "D", "n": "Dimarco", "s": "Int", "c": 39.0}, {"r": "D", "n": "Spinazzola", "s": "Rom", "c": 11.0}, {"r": "D", "n": "Buongiorno", "s": "Tor", "c": 10.0}, {"r": "D", "n": "Bremer", "s": "Juv", "c": 20.0}, {"r": "D", "n": "Lazaro", "s": "Tor", "c": 9.0}, {"r": "D", "n": "Tomori", "s": "Mil", "c": 13.0}, {"r": "D", "n": "Carlos Augusto", "s": "Int", "c": 17.0}, {"r": "D", "n": "Beukema", "s": "Bol", "c": 7.0}, {"r": "C", "n": "Candreva", "s": "Sal", "c": 26.0}, {"r": "A", "n": "Felipe Anderson", "s": "Laz", "c": 22.0}, {"r": "A", "n": "Politano", "s": "Nap", "c": 25.0}, {"r": "C", "n": "Cristante", "s": "Rom", "c": 17.0}, {"r": "C", "n": "Pasalic", "s": "Ata", "c": 13.0}, {"r": "C", "n": "Luis Alberto", "s": "Laz", "c": 49.0}, {"r": "C", "n": "Arthur Melo", "s": "Fio", "c": 8.0}, {"r": "C", "n": "Baldanzi", "s": "Rom", "c": 15.0}, {"r": "C", "n": "Barrenechea", "s": "Fro", "c": 2.0}, {"r": "C", "n": "Alcaraz", "s": "Juv", "c": 14.0}, {"r": "A", "n": "Vlahovic", "s": "Juv", "c": 61.0}, {"r": "A", "n": "Giroud", "s": "Mil", "c": 58.0}, {"r": "A", "n": "Cambiaghi", "s": "Emp", "c": 12.0}, {"r": "A", "n": "Yildiz", "s": "Juv", "c": 5.0}], "Osteopatia Baldazzi": [{"r": "P", "n": "Rui Patricio", "s": "Rom", "c": 28.0}, {"r": "P", "n": "Boer", "s": "Rom", "c": 1.0}, {"r": "P", "n": "Svilar", "s": "Rom", "c": 1.0}, {"r": "D", "n": "Romagnoli", "s": "Laz", "c": 12.0}, {"r": "D", "n": "Bastoni", "s": "Int", "c": 19.0}, {"r": "D", "n": "Boateng J.", "s": "Sal", "c": 8.0}, {"r": "D", "n": "Darmian", "s": "Int", "c": 30.0}, {"r": "D", "n": "Hernandez T.", "s": "Mil", "c": 50.0}, {"r": "D", "n": "Kumbulla", "s": "Sas", "c": 1.0}, {"r": "D", "n": "Gallo", "s": "Lec", "c": 7.0}, {"r": "D", "n": "Perez N.", "s": "Udi", "c": 5.0}, {"r": "C", "n": "De Roon", "s": "Ata", "c": 11.0}, {"r": "C", "n": "Paredes", "s": "Rom", "c": 9.0}, {"r": "A", "n": "Orsolini", "s": "Bol", "c": 20.0}, {"r": "C", "n": "Mckennie", "s": "Juv", "c": 13.0}, {"r": "C", "n": "Samardzic", "s": "Udi", "c": 17.0}, {"r": "C", "n": "Ederson D.s.", "s": "Ata", "c": 20.0}, {"r": "C", "n": "Colpani", "s": "Mon", "c": 23.0}, {"r": "C", "n": "Reijnders", "s": "Mil", "c": 22.0}, {"r": "C", "n": "Ramadani", "s": "Lec", "c": 6.0}, {"r": "A", "n": "Immobile", "s": "Laz", "c": 122.0}, {"r": "A", "n": "Thauvin", "s": "Udi", "c": 17.0}, {"r": "A", "n": "Thuram", "s": "Int", "c": 57.0}, {"r": "A", "n": "Soule'", "s": "Fro", "c": 4.0}, {"r": "A", "n": "Toure' E.", "s": "Ata", "c": 3.0}], "Schiava Praha": [{"r": "P", "n": "Milinkovic-Savic V.", "s": "Tor", "c": 23.0}, {"r": "P", "n": "Gemello", "s": "Tor", "c": 1.0}, {"r": "P", "n": "Di Gregorio", "s": "Mon", "c": 20.0}, {"r": "D", "n": "Mario Rui", "s": "Nap", "c": 10.0}, {"r": "D", "n": "Rodriguez R.", "s": "Tor", "c": 11.0}, {"r": "D", "n": "Mina", "s": "Cag", "c": 3.0}, {"r": "D", "n": "N'Dicka", "s": "Rom", "c": 6.0}, {"r": "D", "n": "Vasquez", "s": "Gen", "c": 10.0}, {"r": "D", "n": "Baschirotto", "s": "Lec", "c": 11.0}, {"r": "D", "n": "Doig", "s": "Sas", "c": 9.0}, {"r": "D", "n": "Posch", "s": "Bol", "c": 30.0}, {"r": "C", "n": "Pellegrini Lo.", "s": "Rom", "c": 22.0}, {"r": "C", "n": "Pulisic", "s": "Mil", "c": 60.0}, {"r": "C", "n": "Zurkowski", "s": "Emp", "c": 15.0}, {"r": "C", "n": "Tameze", "s": "Tor", "c": 7.0}, {"r": "C", "n": "Gudmundsson A.", "s": "Gen", "c": 15.0}, {"r": "C", "n": "Ferguson", "s": "Bol", "c": 21.0}, {"r": "C", "n": "Lindstrom", "s": "Nap", "c": 26.0}, {"r": "C", "n": "Folorunsho", "s": "Ver", "c": 6.0}, {"r": "A", "n": "Niang", "s": "Emp", "c": 0.0}, {"r": "A", "n": "Scamacca", "s": "Ata", "c": 80.0}, {"r": "A", "n": "Raspadori", "s": "Nap", "c": 9.0}, {"r": "A", "n": "Kaio Jorge", "s": "Fro", "c": 2.0}, {"r": "A", "n": "Beltran L.", "s": "Fio", "c": 16.0}, {"r": "A", "n": "Krstovic", "s": "Lec", "c": 21.0}]}, "2024/2025": {"Polisportiva Calitri": [{"r": "P", "n": "Gollini", "s": "Rom", "c": 2.0}, {"r": "P", "n": "Svilar", "s": "Rom", "c": 26.0}, {"r": "P", "n": "Butez", "s": "Com", "c": 4.0}, {"r": "D", "n": "Izzo", "s": "Mon", "c": 4.0}, {"r": "D", "n": "Dimarco", "s": "Int", "c": 44.0}, {"r": "D", "n": "Gosens", "s": "Fio", "c": 18.0}, {"r": "D", "n": "Kolasinac", "s": "Ata", "c": 8.0}, {"r": "D", "n": "Mina", "s": "Cag", "c": 7.0}, {"r": "D", "n": "Pavlovic", "s": "Mil", "c": 9.0}, {"r": "D", "n": "Baschirotto", "s": "Lec", "c": 5.0}, {"r": "D", "n": "Rensch", "s": "Rom", "c": 6.0}, {"r": "C", "n": "Fagioli", "s": "Fio", "c": 8.0}, {"r": "C", "n": "Elmas", "s": "Tor", "c": 12.0}, {"r": "C", "n": "Strefezza", "s": "Com", "c": 15.0}, {"r": "C", "n": "Fofana Y.", "s": "Mil", "c": 13.0}, {"r": "C", "n": "Maldini", "s": "Ata", "c": 17.0}, {"r": "C", "n": "Pobega", "s": "Bol", "c": 2.0}, {"r": "C", "n": "Frendrup", "s": "Gen", "c": 13.0}, {"r": "C", "n": "Zerbin", "s": "Ven", "c": 6.0}, {"r": "A", "n": "Sanchez", "s": "Udi", "c": 5.0}, {"r": "A", "n": "Martinez L.", "s": "Int", "c": 187.0}, {"r": "A", "n": "Retegui", "s": "Ata", "c": 65.0}, {"r": "A", "n": "Dallinga", "s": "Bol", "c": 12.0}, {"r": "A", "n": "Ganvoula", "s": "Mon", "c": 7.0}, {"r": "A", "n": "Fila", "s": "Ven", "c": 9.0}], "Al Khmer FC": [{"r": "P", "n": "Rossi F.", "s": "Ata", "c": 1.0}, {"r": "P", "n": "Rui Patricio", "s": "Ata", "c": 1.0}, {"r": "P", "n": "Carnesecchi", "s": "Ata", "c": 27.0}, {"r": "D", "n": "Biraghi", "s": "Tor", "c": 11.0}, {"r": "D", "n": "Bastoni", "s": "Int", "c": 17.0}, {"r": "D", "n": "Walker", "s": "Mil", "c": 15.0}, {"r": "D", "n": "Hernandez T.", "s": "Mil", "c": 36.0}, {"r": "D", "n": "Ruggeri", "s": "Ata", "c": 12.0}, {"r": "D", "n": "Cacace", "s": "Emp", "c": 8.0}, {"r": "D", "n": "Hien", "s": "Ata", "c": 10.0}, {"r": "D", "n": "Palacios T.", "s": "Mon", "c": 2.0}, {"r": "C", "n": "Pasalic", "s": "Ata", "c": 22.0}, {"r": "C", "n": "Nicolussi Caviglia", "s": "Ven", "c": 3.0}, {"r": "C", "n": "Weah", "s": "Juv", "c": 6.0}, {"r": "C", "n": "Brescianini", "s": "Ata", "c": 20.0}, {"r": "C", "n": "Koopmeiners", "s": "Juv", "c": 47.0}, {"r": "C", "n": "Ferguson", "s": "Bol", "c": 14.0}, {"r": "C", "n": "Adli", "s": "Fio", "c": 18.0}, {"r": "C", "n": "Ciurria", "s": "Mon", "c": 9.0}, {"r": "A", "n": "Leao", "s": "Mil", "c": 66.0}, {"r": "A", "n": "Joao Felix", "s": "Mil", "c": 12.0}, {"r": "A", "n": "Kolo Muani", "s": "Juv", "c": 0.0}, {"r": "A", "n": "De Ketelaere", "s": "Ata", "c": 43.0}, {"r": "A", "n": "Solbakken", "s": "Emp", "c": 0.0}, {"r": "A", "n": "Yildiz", "s": "Juv", "c": 30.0}], "Inceltic": [{"r": "P", "n": "Skorupski", "s": "Bol", "c": 14.0}, {"r": "P", "n": "Caprile", "s": "Cag", "c": 10.0}, {"r": "P", "n": "Sava", "s": "Udi", "c": 7.0}, {"r": "D", "n": "Zappacosta", "s": "Ata", "c": 10.0}, {"r": "D", "n": "Darmian", "s": "Int", "c": 12.0}, {"r": "D", "n": "N'Dicka", "s": "Rom", "c": 11.0}, {"r": "D", "n": "Lazaro", "s": "Tor", "c": 9.0}, {"r": "D", "n": "Augello", "s": "Cag", "c": 5.0}, {"r": "D", "n": "Zappa", "s": "Cag", "c": 7.0}, {"r": "D", "n": "Valeri", "s": "Par", "c": 7.0}, {"r": "D", "n": "Vogliacco", "s": "Par", "c": 6.0}, {"r": "C", "n": "Freuler", "s": "Bol", "c": 10.0}, {"r": "C", "n": "El Shaarawy", "s": "Rom", "c": 8.0}, {"r": "C", "n": "Pulisic", "s": "Mil", "c": 56.0}, {"r": "C", "n": "Malinovskyi", "s": "Gen", "c": 3.0}, {"r": "C", "n": "Saelemaekers", "s": "Rom", "c": 8.0}, {"r": "C", "n": "Marin", "s": "Cag", "c": 7.0}, {"r": "C", "n": "Vlasic", "s": "Tor", "c": 14.0}, {"r": "C", "n": "Tete Morente", "s": "Lec", "c": 15.0}, {"r": "A", "n": "Thauvin", "s": "Udi", "c": 21.0}, {"r": "A", "n": "Lukaku", "s": "Nap", "c": 150.0}, {"r": "A", "n": "Lookman", "s": "Ata", "c": 57.0}, {"r": "A", "n": "Dia", "s": "Laz", "c": 25.0}, {"r": "A", "n": "Okafor", "s": "Nap", "c": 6.0}, {"r": "A", "n": "Pizarro", "s": "Udi", "c": 1.0}], "Team Onto": [{"r": "P", "n": "Sportiello", "s": "Mil", "c": 1.0}, {"r": "P", "n": "Maignan", "s": "Mil", "c": 39.0}, {"r": "P", "n": "Montipo'", "s": "Ver", "c": 8.0}, {"r": "D", "n": "Zortea", "s": "Cag", "c": 7.0}, {"r": "D", "n": "Gallo", "s": "Lec", "c": 8.0}, {"r": "D", "n": "Bellanova", "s": "Ata", "c": 30.0}, {"r": "D", "n": "Tavares N.", "s": "Laz", "c": 15.0}, {"r": "D", "n": "De Winter", "s": "Gen", "c": 5.0}, {"r": "D", "n": "Gila", "s": "Laz", "c": 5.0}, {"r": "D", "n": "Ehizibue", "s": "Udi", "c": 7.0}, {"r": "D", "n": "Delprato", "s": "Par", "c": 14.0}, {"r": "C", "n": "Paredes", "s": "Rom", "c": 4.0}, {"r": "C", "n": "Pellegrini Lo.", "s": "Rom", "c": 28.0}, {"r": "C", "n": "Zaniolo", "s": "Fio", "c": 12.0}, {"r": "C", "n": "Frattesi", "s": "Int", "c": 25.0}, {"r": "C", "n": "Samardzic", "s": "Ata", "c": 32.0}, {"r": "C", "n": "Sohm", "s": "Par", "c": 13.0}, {"r": "C", "n": "Casadei", "s": "Tor", "c": 10.0}, {"r": "C", "n": "Pisilli", "s": "Rom", "c": 2.0}, {"r": "A", "n": "Thuram", "s": "Int", "c": 131.0}, {"r": "A", "n": "Djuric", "s": "Par", "c": 14.0}, {"r": "A", "n": "Pierotti", "s": "Lec", "c": 12.0}, {"r": "A", "n": "Taremi", "s": "Int", "c": 17.0}, {"r": "A", "n": "Tengstedt", "s": "Ver", "c": 23.0}, {"r": "A", "n": "Douvikas", "s": "Com", "c": 10.0}], "So Lille": [{"r": "P", "n": "Di Gennaro", "s": "Int", "c": 1.0}, {"r": "P", "n": "Sommer", "s": "Int", "c": 35.0}, {"r": "P", "n": "Martinez Jo.", "s": "Int", "c": 1.0}, {"r": "D", "n": "Djimsiti", "s": "Ata", "c": 6.0}, {"r": "D", "n": "Di Lorenzo", "s": "Nap", "c": 20.0}, {"r": "D", "n": "Gabbia", "s": "Mil", "c": 12.0}, {"r": "D", "n": "Tomori", "s": "Mil", "c": 7.0}, {"r": "D", "n": "Kalulu", "s": "Juv", "c": 7.0}, {"r": "D", "n": "Carlos Augusto", "s": "Int", "c": 13.0}, {"r": "D", "n": "Dodo'", "s": "Fio", "c": 9.0}, {"r": "D", "n": "Beukema", "s": "Bol", "c": 8.0}, {"r": "C", "n": "Politano", "s": "Nap", "c": 24.0}, {"r": "C", "n": "Locatelli", "s": "Juv", "c": 9.0}, {"r": "C", "n": "Barella", "s": "Int", "c": 29.0}, {"r": "C", "n": "Guendouzi", "s": "Laz", "c": 11.0}, {"r": "C", "n": "Zambo Anguissa", "s": "Nap", "c": 17.0}, {"r": "C", "n": "Zalewski", "s": "Int", "c": 5.0}, {"r": "C", "n": "Reijnders", "s": "Mil", "c": 14.0}, {"r": "C", "n": "Felici", "s": "Cag", "c": 11.0}, {"r": "A", "n": "Pinamonti", "s": "Gen", "c": 30.0}, {"r": "A", "n": "Vlahovic", "s": "Juv", "c": 160.0}, {"r": "A", "n": "Piccoli", "s": "Cag", "c": 14.0}, {"r": "A", "n": "Isaksen", "s": "Laz", "c": 12.0}, {"r": "A", "n": "Mosquera", "s": "Ver", "c": 16.0}, {"r": "A", "n": "Dominguez B.", "s": "Bol", "c": 16.0}], "Ac Spiaze": [{"r": "P", "n": "Milinkovic-Savic V.", "s": "Tor", "c": 21.0}, {"r": "P", "n": "Vasquez D.", "s": "Emp", "c": 16.0}, {"r": "P", "n": "Mandas", "s": "Laz", "c": 1.0}, {"r": "D", "n": "Hummels", "s": "Rom", "c": 8.0}, {"r": "D", "n": "Pavard", "s": "Int", "c": 17.0}, {"r": "D", "n": "Rrahmani", "s": "Nap", "c": 13.0}, {"r": "D", "n": "Gatti", "s": "Juv", "c": 15.0}, {"r": "D", "n": "Olivera", "s": "Nap", "c": 9.0}, {"r": "D", "n": "Lucumi'", "s": "Bol", "c": 6.0}, {"r": "D", "n": "Valle", "s": "Com", "c": 3.0}, {"r": "D", "n": "Solet", "s": "Udi", "c": 6.0}, {"r": "C", "n": "Zaccagni", "s": "Laz", "c": 50.0}, {"r": "C", "n": "Sensi", "s": "Mon", "c": 2.0}, {"r": "C", "n": "Lobotka", "s": "Nap", "c": 9.0}, {"r": "C", "n": "McTominay", "s": "Nap", "c": 16.0}, {"r": "C", "n": "Thuram K.", "s": "Juv", "c": 10.0}, {"r": "C", "n": "Folorunsho", "s": "Fio", "c": 1.0}, {"r": "C", "n": "Anjorin", "s": "Emp", "c": 12.0}, {"r": "C", "n": "Diao", "s": "Com", "c": 18.0}, {"r": "A", "n": "Odgaard", "s": "Bol", "c": 21.0}, {"r": "A", "n": "Colombo", "s": "Emp", "c": 16.0}, {"r": "A", "n": "Sarr A.", "s": "Ver", "c": 15.0}, {"r": "A", "n": "Castellanos", "s": "Laz", "c": 47.0}, {"r": "A", "n": "Vlahovic V.", "s": "Ata", "c": 1.0}, {"r": "A", "n": "Gimenez", "s": "Mil", "c": 30.0}], "Schiava Praha": [{"r": "P", "n": "Meret", "s": "Nap", "c": 27.0}, {"r": "P", "n": "De Gea", "s": "Fio", "c": 10.0}, {"r": "P", "n": "Joronen", "s": "Ven", "c": 7.0}, {"r": "D", "n": "Spinazzola", "s": "Nap", "c": 13.0}, {"r": "D", "n": "Mancini", "s": "Rom", "c": 12.0}, {"r": "D", "n": "Angelino", "s": "Rom", "c": 13.0}, {"r": "D", "n": "Dumfries", "s": "Int", "c": 18.0}, {"r": "D", "n": "Vasquez", "s": "Gen", "c": 9.0}, {"r": "D", "n": "Cambiaso", "s": "Juv", "c": 29.0}, {"r": "D", "n": "Posch", "s": "Ata", "c": 7.0}, {"r": "D", "n": "Circati", "s": "Par", "c": 6.0}, {"r": "C", "n": "Lazovic", "s": "Ver", "c": 11.0}, {"r": "C", "n": "Orsolini", "s": "Bol", "c": 31.0}, {"r": "C", "n": "Gaetano", "s": "Cag", "c": 10.0}, {"r": "C", "n": "Ilic", "s": "Tor", "c": 10.0}, {"r": "C", "n": "Man", "s": "Par", "c": 37.0}, {"r": "C", "n": "Ricci S.", "s": "Tor", "c": 9.0}, {"r": "C", "n": "Kone' M.", "s": "Rom", "c": 8.0}, {"r": "C", "n": "Neres", "s": "Nap", "c": 22.0}, {"r": "A", "n": "Kean", "s": "Fio", "c": 42.0}, {"r": "A", "n": "Cutrone", "s": "Com", "c": 19.0}, {"r": "A", "n": "Lucca", "s": "Udi", "c": 24.0}, {"r": "A", "n": "Castro S.", "s": "Bol", "c": 8.0}, {"r": "A", "n": "Adams C.", "s": "Tor", "c": 26.0}, {"r": "A", "n": "Dovbyk", "s": "Rom", "c": 110.0}], "Lino Banfield": [{"r": "P", "n": "Perin", "s": "Juv", "c": 1.0}, {"r": "P", "n": "Provedel", "s": "Laz", "c": 11.0}, {"r": "P", "n": "Di Gregorio", "s": "Juv", "c": 49.0}, {"r": "D", "n": "Luperto", "s": "Cag", "c": 9.0}, {"r": "D", "n": "Pezzella Giu.", "s": "Emp", "c": 12.0}, {"r": "D", "n": "Buongiorno", "s": "Nap", "c": 16.0}, {"r": "D", "n": "Miranda J.", "s": "Bol", "c": 10.0}, {"r": "D", "n": "Ismajli", "s": "Emp", "c": 17.0}, {"r": "D", "n": "Bijol", "s": "Udi", "c": 13.0}, {"r": "D", "n": "Tchatchoua", "s": "Ver", "c": 11.0}, {"r": "D", "n": "Giannetti L.", "s": "Udi", "c": 4.0}, {"r": "C", "n": "De Roon", "s": "Ata", "c": 7.0}, {"r": "C", "n": "Calhanoglu", "s": "Int", "c": 57.0}, {"r": "C", "n": "Ndoye", "s": "Bol", "c": 30.0}, {"r": "C", "n": "Ederson D.s.", "s": "Ata", "c": 17.0}, {"r": "C", "n": "Miretti", "s": "Gen", "c": 12.0}, {"r": "C", "n": "Oristanio", "s": "Ven", "c": 20.0}, {"r": "C", "n": "Paz N.", "s": "Com", "c": 10.0}, {"r": "C", "n": "Conceicao", "s": "Juv", "c": 11.0}, {"r": "A", "n": "Gonzalez N.", "s": "Juv", "c": 28.0}, {"r": "A", "n": "Esposito Se.", "s": "Emp", "c": 31.0}, {"r": "A", "n": "Gudmundsson A.", "s": "Fio", "c": 40.0}, {"r": "A", "n": "Mota", "s": "Mon", "c": 19.0}, {"r": "A", "n": "Krstovic", "s": "Lec", "c": 17.0}, {"r": "A", "n": "Bonny", "s": "Par", "c": 41.0}]}, "2025/2026": {"Polisportiva Calitri": [{"r": "P", "n": "Perin", "s": "Juv", "c": 3.0}, {"r": "P", "n": "Di Gregorio", "s": "Juv", "c": 34.0}, {"r": "P", "n": "Okoye", "s": "Udi", "c": 12.0}, {"r": "D", "n": "Dimarco", "s": "Int", "c": 19.0}, {"r": "D", "n": "Martin", "s": "Gen", "c": 13.0}, {"r": "D", "n": "Rrahmani", "s": "Nap", "c": 12.0}, {"r": "D", "n": "Pavlovic", "s": "Mil", "c": 9.0}, {"r": "D", "n": "Dumfries", "s": "Int", "c": 31.0}, {"r": "D", "n": "Carlos Augusto", "s": "Int", "c": 10.0}, {"r": "D", "n": "Dodò", "s": "Fio", "c": 8.0}, {"r": "D", "n": "Ramon", "s": "Com", "c": 9.0}, {"r": "C", "n": "Barella", "s": "Int", "c": 22.0}, {"r": "C", "n": "Fagioli", "s": "Fio", "c": 8.0}, {"r": "C", "n": "Perrone", "s": "Com", "c": 16.0}, {"r": "C", "n": "Bernabè", "s": "Par", "c": 0.0}, {"r": "C", "n": "Konè I.", "s": "Sas", "c": 17.0}, {"r": "C", "n": "Atta", "s": "Udi", "c": 16.0}, {"r": "C", "n": "Taylor K.", "s": "Laz", "c": 14.0}, {"r": "C", "n": "Santos A.", "s": "Nap", "c": 11.0}, {"r": "A", "n": "Berardi", "s": "Sas", "c": 30.0}, {"r": "A", "n": "Colombo", "s": "Gen", "c": 8.0}, {"r": "A", "n": "Malen", "s": "Rom", "c": 0.0}, {"r": "A", "n": "Davis K.", "s": "Udi", "c": 13.0}, {"r": "A", "n": "Orban G.", "s": "Ver", "c": 15.0}, {"r": "A", "n": "Castro S.", "s": "Bol", "c": 36.0}], "Boca Figa": [{"r": "P", "n": "Gollini", "s": "Rom", "c": 1.0}, {"r": "P", "n": "Svilar", "s": "Rom", "c": 33.0}, {"r": "P", "n": "Zelezny", "s": "Rom", "c": 1.0}, {"r": "D", "n": "Rugani", "s": "Fio", "c": 2.0}, {"r": "D", "n": "Gosens", "s": "Fio", "c": 18.0}, {"r": "D", "n": "Bremer", "s": "Juv", "c": 20.0}, {"r": "D", "n": "N'Dicka", "s": "Rom", "c": 11.0}, {"r": "D", "n": "Palestra", "s": "Cag", "c": 30.0}, {"r": "D", "n": "Valle", "s": "Com", "c": 6.0}, {"r": "D", "n": "Canestrelli", "s": "Pis", "c": 5.0}, {"r": "D", "n": "Bozhinov", "s": "Pis", "c": 1.0}, {"r": "C", "n": "De Roon", "s": "Ata", "c": 12.0}, {"r": "C", "n": "Mandragora", "s": "Fio", "c": 17.0}, {"r": "C", "n": "Zambo Anguissa", "s": "Nap", "c": 17.0}, {"r": "C", "n": "Nicolussi Caviglia", "s": "Par", "c": 3.0}, {"r": "C", "n": "Saelemaekers", "s": "Mil", "c": 12.0}, {"r": "C", "n": "McKennie", "s": "Juv", "c": 7.0}, {"r": "C", "n": "Stengs", "s": "Pis", "c": 1.0}, {"r": "C", "n": "Thuram K.", "s": "Juv", "c": 31.0}, {"r": "A", "n": "Bonazzoli", "s": "Cre", "c": 22.0}, {"r": "A", "n": "Kean", "s": "Fio", "c": 168.0}, {"r": "A", "n": "Lukaku", "s": "Nap", "c": 37.0}, {"r": "A", "n": "Kilicsoy", "s": "Cag", "c": 50.0}, {"r": "A", "n": "Trepy", "s": "Cag", "c": 1.0}, {"r": "A", "n": "Albarracin", "s": "Cag", "c": 1.0}], "Inceltic": [{"r": "P", "n": "Terracciano", "s": "Mil", "c": 1.0}, {"r": "P", "n": "Maignan", "s": "Mil", "c": 30.0}, {"r": "P", "n": "Caprile", "s": "Cag", "c": 8.0}, {"r": "D", "n": "Zappacosta", "s": "Ata", "c": 8.0}, {"r": "D", "n": "Mancini", "s": "Rom", "c": 12.0}, {"r": "D", "n": "Zappa", "s": "Cag", "c": 7.0}, {"r": "D", "n": "Vojvoda", "s": "Com", "c": 7.0}, {"r": "D", "n": "Gila", "s": "Laz", "c": 15.0}, {"r": "D", "n": "Cabal", "s": "Juv", "c": 7.0}, {"r": "D", "n": "Frese", "s": "Ver", "c": 3.0}, {"r": "D", "n": "Provstgaard", "s": "Laz", "c": 4.0}, {"r": "C", "n": "Zaccagni", "s": "Laz", "c": 64.0}, {"r": "C", "n": "Loftus-Cheek", "s": "Mil", "c": 9.0}, {"r": "C", "n": "Malinovskyi", "s": "Gen", "c": 8.0}, {"r": "C", "n": "Strefezza", "s": "Par", "c": 10.0}, {"r": "C", "n": "Zalewski", "s": "Ata", "c": 7.0}, {"r": "C", "n": "Baldanzi", "s": "Gen", "c": 0.0}, {"r": "C", "n": "Zerbin", "s": "Cre", "c": 5.0}, {"r": "C", "n": "Tourè I.", "s": "Pis", "c": 10.0}, {"r": "A", "n": "Okereke", "s": "Cre", "c": 1.0}, {"r": "A", "n": "David", "s": "Juv", "c": 110.0}, {"r": "A", "n": "Laurientè", "s": "Sas", "c": 14.0}, {"r": "A", "n": "Ferguson E.", "s": "Rom", "c": 70.0}, {"r": "A", "n": "Diao", "s": "Com", "c": 16.0}, {"r": "A", "n": "Douvikas", "s": "Com", "c": 51.0}], "Team Onto": [{"r": "P", "n": "Sportiello", "s": "Ata", "c": 1.0}, {"r": "P", "n": "Skorupski", "s": "Bol", "c": 11.0}, {"r": "P", "n": "Carnesecchi", "s": "Ata", "c": 17.0}, {"r": "D", "n": "Spinazzola", "s": "Nap", "c": 7.0}, {"r": "D", "n": "Bastoni", "s": "Int", "c": 27.0}, {"r": "D", "n": "Calabresi", "s": "Pis", "c": 5.0}, {"r": "D", "n": "Gabbia", "s": "Mil", "c": 8.0}, {"r": "D", "n": "Hermoso", "s": "Rom", "c": 13.0}, {"r": "D", "n": "De Winter", "s": "Mil", "c": 7.0}, {"r": "D", "n": "Kelly L.", "s": "Juv", "c": 0.0}, {"r": "D", "n": "Bella-Kotchap", "s": "Ver", "c": 6.0}, {"r": "C", "n": "Bernardeschi", "s": "Bol", "c": 5.0}, {"r": "C", "n": "Politano", "s": "Nap", "c": 34.0}, {"r": "C", "n": "Cristante", "s": "Rom", "c": 13.0}, {"r": "C", "n": "Frendrup", "s": "Gen", "c": 9.0}, {"r": "C", "n": "Gudmundsson A.", "s": "Fio", "c": 31.0}, {"r": "C", "n": "Pisilli", "s": "Rom", "c": 6.0}, {"r": "C", "n": "Rowe", "s": "Bol", "c": 14.0}, {"r": "C", "n": "Vergara", "s": "Nap", "c": 17.0}, {"r": "A", "n": "Vlahovic", "s": "Juv", "c": 27.0}, {"r": "A", "n": "Raspadori", "s": "Ata", "c": 40.0}, {"r": "A", "n": "Soulè", "s": "Rom", "c": 62.0}, {"r": "A", "n": "Hojlund", "s": "Nap", "c": 86.0}, {"r": "A", "n": "Krstovic", "s": "Ata", "c": 34.0}, {"r": "A", "n": "Arena A.", "s": "Rom", "c": 0.0}], "BaldaZZers": [{"r": "P", "n": "Falcone", "s": "Lec", "c": 15.0}, {"r": "P", "n": "Furlanetto", "s": "Laz", "c": 1.0}, {"r": "P", "n": "Motta", "s": "Laz", "c": 1.0}, {"r": "D", "n": "Patric", "s": "Laz", "c": 1.0}, {"r": "D", "n": "Buongiorno", "s": "Nap", "c": 20.0}, {"r": "D", "n": "Di Lorenzo", "s": "Nap", "c": 27.0}, {"r": "D", "n": "Zortea", "s": "Bol", "c": 8.0}, {"r": "D", "n": "Tomori", "s": "Mil", "c": 8.0}, {"r": "D", "n": "Baschirotto", "s": "Cre", "c": 9.0}, {"r": "D", "n": "Valeri", "s": "Par", "c": 10.0}, {"r": "D", "n": "Bernasconi", "s": "Ata", "c": 10.0}, {"r": "C", "n": "Locatelli", "s": "Juv", "c": 13.0}, {"r": "C", "n": "Rabiot", "s": "Mil", "c": 26.0}, {"r": "C", "n": "Odgaard", "s": "Bol", "c": 20.0}, {"r": "C", "n": "Lobotka", "s": "Nap", "c": 9.0}, {"r": "C", "n": "Maldini", "s": "Laz", "c": 13.0}, {"r": "C", "n": "Ederson D.S.", "s": "Ata", "c": 17.0}, {"r": "C", "n": "Isaksen", "s": "Laz", "c": 15.0}, {"r": "C", "n": "Baturina", "s": "Com", "c": 69.0}, {"r": "A", "n": "Dybala", "s": "Rom", "c": 49.0}, {"r": "A", "n": "Simeone", "s": "Tor", "c": 8.0}, {"r": "A", "n": "De Ketelaere", "s": "Ata", "c": 41.0}, {"r": "A", "n": "Solomon", "s": "Fio", "c": 8.0}, {"r": "A", "n": "Yildiz", "s": "Juv", "c": 77.0}, {"r": "A", "n": "Pellegrino M.", "s": "Par", "c": 17.0}], "Schiava Praha": [{"r": "P", "n": "Meret", "s": "Nap", "c": 38.0}, {"r": "P", "n": "Milinkovic-Savic V.", "s": "Nap", "c": 4.0}, {"r": "P", "n": "Contini", "s": "Nap", "c": 1.0}, {"r": "D", "n": "Bellanova", "s": "Ata", "c": 16.0}, {"r": "D", "n": "Kalulu", "s": "Juv", "c": 10.0}, {"r": "D", "n": "Estupinan", "s": "Mil", "c": 13.0}, {"r": "D", "n": "Vasquez", "s": "Gen", "c": 14.0}, {"r": "D", "n": "Scalvini", "s": "Ata", "c": 14.0}, {"r": "D", "n": "Pongracic", "s": "Fio", "c": 5.0}, {"r": "D", "n": "Dossena", "s": "Cag", "c": 1.0}, {"r": "D", "n": "Wesley", "s": "Rom", "c": 18.0}, {"r": "C", "n": "Orsolini", "s": "Bol", "c": 75.0}, {"r": "C", "n": "Tramoni M.", "s": "Pis", "c": 15.0}, {"r": "C", "n": "Konè M.", "s": "Rom", "c": 26.0}, {"r": "C", "n": "Casadei", "s": "Tor", "c": 12.0}, {"r": "C", "n": "El Aynaoui", "s": "Rom", "c": 9.0}, {"r": "C", "n": "Marchwinski", "s": "Lec", "c": 1.0}, {"r": "C", "n": "Conceicao", "s": "Juv", "c": 23.0}, {"r": "C", "n": "Przyborek", "s": "Laz", "c": 2.0}, {"r": "A", "n": "Pavoletti", "s": "Cag", "c": 1.0}, {"r": "A", "n": "Scamacca", "s": "Ata", "c": 26.0}, {"r": "A", "n": "Martinez L.", "s": "Int", "c": 135.0}, {"r": "A", "n": "Piccoli", "s": "Fio", "c": 9.0}, {"r": "A", "n": "Vitinha O.", "s": "Gen", "c": 14.0}, {"r": "A", "n": "Openda", "s": "Juv", "c": 22.0}], "Lino Banfield": [{"r": "P", "n": "Di Gennaro", "s": "Int", "c": 1.0}, {"r": "P", "n": "Sommer", "s": "Int", "c": 40.0}, {"r": "P", "n": "Martinez Jo.", "s": "Int", "c": 2.0}, {"r": "D", "n": "Akanji", "s": "Int", "c": 10.0}, {"r": "D", "n": "Mina", "s": "Cag", "c": 11.0}, {"r": "D", "n": "Ehizibue", "s": "Udi", "c": 4.0}, {"r": "D", "n": "Bisseck", "s": "Int", "c": 4.0}, {"r": "D", "n": "Norton-Cuffy", "s": "Gen", "c": 9.0}, {"r": "D", "n": "Solet", "s": "Udi", "c": 17.0}, {"r": "D", "n": "Veiga D.", "s": "Lec", "c": 3.0}, {"r": "D", "n": "Joao Mario", "s": "Bol", "c": 1.0}, {"r": "C", "n": "Calhanoglu", "s": "Int", "c": 32.0}, {"r": "C", "n": "McTominay", "s": "Nap", "c": 78.0}, {"r": "C", "n": "Da Cunha", "s": "Com", "c": 17.0}, {"r": "C", "n": "Aebischer", "s": "Pis", "c": 4.0}, {"r": "C", "n": "Thorstvedt", "s": "Sas", "c": 0.0}, {"r": "C", "n": "Ekkelenkamp", "s": "Udi", "c": 14.0}, {"r": "C", "n": "Miller L.", "s": "Udi", "c": 1.0}, {"r": "C", "n": "Sala A.", "s": "Lec", "c": 1.0}, {"r": "A", "n": "Vardy", "s": "Cre", "c": 15.0}, {"r": "A", "n": "Esposito Se.", "s": "Cag", "c": 7.0}, {"r": "A", "n": "Nkunku", "s": "Mil", "c": 24.0}, {"r": "A", "n": "Thuram", "s": "Int", "c": 163.0}, {"r": "A", "n": "Bonny", "s": "Int", "c": 7.0}, {"r": "A", "n": "Bayo V.", "s": "Udi", "c": 3.0}], "São APAwlo F.C.": [{"r": "P", "n": "Vigorito", "s": "Com", "c": 1.0}, {"r": "P", "n": "Butez", "s": "Com", "c": 17.0}, {"r": "P", "n": "Tornqvist", "s": "Com", "c": 1.0}, {"r": "D", "n": "Diego Carlos", "s": "Com", "c": 6.0}, {"r": "D", "n": "Celik", "s": "Rom", "c": 14.0}, {"r": "D", "n": "Hien", "s": "Ata", "c": 7.0}, {"r": "D", "n": "Bartesaghi", "s": "Mil", "c": 24.0}, {"r": "D", "n": "Kempf", "s": "Com", "c": 16.0}, {"r": "D", "n": "Smolcic I.", "s": "Com", "c": 4.0}, {"r": "D", "n": "Idrissi R.", "s": "Cag", "c": 10.0}, {"r": "D", "n": "Belghali", "s": "Ver", "c": 14.0}, {"r": "C", "n": "Zielinski", "s": "Int", "c": 12.0}, {"r": "C", "n": "Pulisic", "s": "Mil", "c": 74.0}, {"r": "C", "n": "Modric", "s": "Mil", "c": 13.0}, {"r": "C", "n": "Zaniolo", "s": "Udi", "c": 28.0}, {"r": "C", "n": "Vlasic", "s": "Tor", "c": 19.0}, {"r": "C", "n": "Diouf", "s": "Int", "c": 1.0}, {"r": "C", "n": "Paz N.", "s": "Com", "c": 73.0}, {"r": "C", "n": "Sucic P.", "s": "Int", "c": 9.0}, {"r": "A", "n": "Milik", "s": "Juv", "c": 1.0}, {"r": "A", "n": "Pinamonti", "s": "Sas", "c": 21.0}, {"r": "A", "n": "Leao", "s": "Mil", "c": 75.0}, {"r": "A", "n": "Esposito F.P.", "s": "Int", "c": 7.0}, {"r": "A", "n": "Elphege", "s": "Par", "c": 1.0}, {"r": "A", "n": "Kulenovic", "s": "Tor", "c": 5.0}]}}, "albo": [{"stagione": "2016/2017", "legasaur": "Poggibonsi", "coffa": "//", "europa": "//", "supercoffa": "//", "retrocessione": "Vis Anto"}, {"stagione": "2017/2018", "legasaur": "Poggibonsi", "coffa": "Poggibonsi", "europa": "Vasilis Unitis", "supercoffa": "//", "retrocessione": "SC Oreggio"}, {"stagione": "2018/2019", "legasaur": "Lino Banfield", "coffa": "Boca Figa", "europa": "Polisportiva Calitri", "supercoffa": "Vasilis Unitis", "retrocessione": "Team Onto"}, {"stagione": "2019/2020", "legasaur": "Vladigrado", "coffa": "Poggibonsi", "europa": "Polisportiva Calitri", "supercoffa": "Vladigrado", "retrocessione": "Vasilis Unitis"}, {"stagione": "2020/2021", "legasaur": "Schiava Praha", "coffa": "Amario Lucano", "europa": "Polisportiva Calitri", "supercoffa": "Polisportiva Calitri", "retrocessione": "//"}, {"stagione": "2021/2022", "legasaur": "Boca Figa", "coffa": "Amario Lucano", "europa": "SC Oreggio", "supercoffa": "//", "retrocessione": "Team Onto"}, {"stagione": "2022/2023", "legasaur": "Poggibonsi", "coffa": "Amario Lucano", "europa": "Politehnica Gyasi", "supercoffa": "//", "retrocessione": "Amario Lucano"}, {"stagione": "2023/2024", "legasaur": "So Lille", "coffa": "Schiava Praha", "europa": "Vladigrado", "supercoffa": "//", "retrocessione": "Osteopatia Baldazzi"}, {"stagione": "2024/2025", "legasaur": "InCeltic", "coffa": "Polisportiva Calitri", "europa": "InCeltic", "supercoffa": "Schiava Praha", "retrocessione": "Team Onto"}, {"stagione": "2025/2026", "legasaur": "Polisportiva Calitri", "coffa": "Lino Banfield", "europa": "Schiava Praha", "supercoffa": "Polisportiva Calitri", "retrocessione": "InCeltic"}], "storico": [{"team": "Polisportiva Calitri", "legasaur": 1, "coffa": 1, "europa": 3, "supercoffa": 2, "totale": 7}, {"team": "Poggibonsi", "legasaur": 4, "coffa": 2, "europa": 0, "supercoffa": 0, "totale": 6}, {"team": "Vladigrado", "legasaur": 1, "coffa": 1, "europa": 0, "supercoffa": 1, "totale": 3}, {"team": "AC Spiaze", "legasaur": 0, "coffa": 3, "europa": 0, "supercoffa": 0, "totale": 3}, {"team": "Schiava Praha", "legasaur": 1, "coffa": 1, "europa": 1, "supercoffa": 0, "totale": 3}, {"team": "Vasilis Unitis", "legasaur": 0, "coffa": 0, "europa": 1, "supercoffa": 1, "totale": 2}, {"team": "Lino Banfield", "legasaur": 1, "coffa": 1, "europa": 0, "supercoffa": 0, "totale": 2}, {"team": "Boca Figa", "legasaur": 1, "coffa": 1, "europa": 0, "supercoffa": 0, "totale": 2}, {"team": "InCeltic", "legasaur": 1, "coffa": 0, "europa": 1, "supercoffa": 0, "totale": 2}, {"team": "SC Oreggio", "legasaur": 0, "coffa": 0, "europa": 1, "supercoffa": 0, "totale": 1}, {"team": "Politehnica Gyasi", "legasaur": 0, "coffa": 0, "europa": 1, "supercoffa": 0, "totale": 1}, {"team": "Team Onto", "legasaur": 0, "coffa": 0, "europa": 0, "supercoffa": 0, "totale": 0}, {"team": "Vis Anto", "legasaur": 0, "coffa": 0, "europa": 0, "supercoffa": 0, "totale": 0}, {"team": "Al Khmer", "legasaur": 0, "coffa": 0, "europa": 0, "supercoffa": 0, "totale": 0}, {"team": "BaldaZZers", "legasaur": 0, "coffa": 0, "europa": 0, "supercoffa": 0, "totale": 0}, {"team": "São APAwlo F.C.", "legasaur": 0, "coffa": 0, "europa": 0, "supercoffa": 0, "totale": 0}]};
+
+// ---- NAV ----
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ---- CLASSIFICHE ----
+let currentClsSeason = '2025/2026';
+
+function renderClassifica(season) {
+  currentClsSeason = season;
+  const teams = DATA.classifiche[season] || [];
+  document.querySelectorAll('#cls-seasons .season-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.season === season);
+  });
+  
+  // Detect available columns
+  const hasG = teams.some(t => t.g !== undefined);
+  const hasV = teams.some(t => t.v !== undefined);
+  const hasPt = teams.some(t => t.pt !== undefined);
+  const hasTotale = teams.some(t => t.totale !== undefined || t.pt_totali !== undefined);
+  const hasVerdict = teams.some(t => t.verdict);
+  
+  let cols = '<th>#</th><th>Squadra</th>';
+  if (hasPt) cols += '<th class="num-cell">Pt</th>';
+  if (hasG) cols += '<th class="num-cell">G</th>';
+  if (hasV) cols += '<th class="num-cell">V</th><th class="num-cell">N</th><th class="num-cell">P</th>';
+  if (teams.some(t => t.gf !== undefined)) cols += '<th class="num-cell">Gf</th><th class="num-cell">Gs</th><th class="num-cell">Dr</th>';
+  if (hasTotale) cols += '<th class="num-cell">Pt. Tot.</th>';
+  if (hasVerdict) cols += '<th>Verdetti</th>';
+  
+  let rows = '';
+  teams.forEach(t => {
+    const posClass = t.pos <= 3 ? ' pos-' + t.pos : '';
+    let vClass = '';
+    let verdict = t.verdict || '';
+    if (verdict.includes('Ultimo')) vClass = ' verdict-retro';
+    
+    rows += '<tr>';
+    rows += `<td class="pos-cell${posClass}">${t.pos}</td>`;
+    rows += `<td class="team-cell">${t.team}</td>`;
+    if (hasPt) rows += `<td class="num-cell"><b>${t.pt !== undefined ? Math.round(t.pt) : '-'}</b></td>`;
+    if (hasG) rows += `<td class="num-cell">${t.g !== undefined ? Math.round(t.g) : '-'}</td>`;
+    if (hasV) {
+      rows += `<td class="num-cell">${t.v !== undefined ? Math.round(t.v) : '-'}</td>`;
+      rows += `<td class="num-cell">${t.n !== undefined ? Math.round(t.n) : '-'}</td>`;
+      rows += `<td class="num-cell">${t.p !== undefined ? Math.round(t.p) : '-'}</td>`;
+    }
+    if (teams.some(t => t.gf !== undefined)) {
+      rows += `<td class="num-cell">${t.gf !== undefined ? Math.round(t.gf) : '-'}</td>`;
+      rows += `<td class="num-cell">${t.gs !== undefined ? Math.round(t.gs) : '-'}</td>`;
+      rows += `<td class="num-cell">${t.dr !== undefined ? t.dr : '-'}</td>`;
+    }
+    if (hasTotale) {
+      const tot = t.totale || t.pt_totali || '-';
+      rows += `<td class="num-cell">${tot !== '-' ? tot.toFixed(1) : '-'}</td>`;
+    }
+    if (hasVerdict) rows += `<td class="verdict-cell${vClass}">${verdict}</td>`;
+    rows += '</tr>';
+  });
+  
+  document.getElementById('cls-table').innerHTML = `<table><thead><tr>${cols}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function initClassifiche() {
+  const seasons = Object.keys(DATA.classifiche).reverse();
+  const container = document.getElementById('cls-seasons');
+  container.innerHTML = seasons.map(s => 
+    `<button class="season-btn${s === currentClsSeason ? ' active' : ''}" data-season="${s}" onclick="renderClassifica('${s}')">${s}</button>`
+  ).join('');
+  renderClassifica(currentClsSeason);
+}
+
+// ---- ALBO D'ORO ----
+function initAlbo() {
+  const grid = document.getElementById('albo-grid');
+  grid.innerHTML = DATA.albo.slice().reverse().map(a => {
+    let lines = '';
+    lines += `<div class="trophy-line"><span class="label">&#127942; Legasaur:</span><span class="val">${a.legasaur || '-'}</span></div>`;
+    const coffaLabel = a.stagione >= '2021' ? 'Coffa dei Capponi' : (a.stagione >= '2018' ? 'Coffa Italia' : 'Coffa Italia');
+    lines += `<div class="trophy-line"><span class="label">&#127942; ${coffaLabel}:</span><span class="val">${a.coffa && a.coffa !== '//' ? a.coffa : '-'}</span></div>`;
+    const europaLabel = a.stagione >= '2021' ? '+Europa League' : 'Cof FA Cup';
+    lines += `<div class="trophy-line"><span class="label">&#127942; ${europaLabel}:</span><span class="val">${a.europa && a.europa !== '//' ? a.europa : '-'}</span></div>`;
+    lines += `<div class="trophy-line"><span class="label">&#127942; Supercoffa:</span><span class="val">${a.supercoffa && a.supercoffa !== '//' ? a.supercoffa : '-'}</span></div>`;
+    if (a.retrocessione && a.retrocessione !== '//') {
+      lines += `<div class="trophy-line"><span class="label" style="color:var(--danger)">&#128308; Retrocessa:</span><span class="val" style="color:var(--danger)">${a.retrocessione}</span></div>`;
+    }
+    return `<div class="trophy-card">
+      <div class="season">${a.stagione}</div>
+      <div class="winner">&#127942; ${a.legasaur}</div>
+      ${lines}
+    </div>`;
+  }).join('');
+}
+
+// ---- STORICO TROFEI ----
+function initStorico() {
+  const container = document.getElementById('storico-content');
+  const maxTot = Math.max(...DATA.storico.map(s => s.totale));
+  
+  // Also render as table
+  let tableHtml = `<table><thead><tr>
+    <th>Squadra</th><th class="num-cell">Legasaur</th><th class="num-cell">Coffa</th>
+    <th class="num-cell">+Europa</th><th class="num-cell">Supercoffa</th><th class="num-cell">Totale</th>
+  </tr></thead><tbody>`;
+  
+  let barsHtml = '';
+  DATA.storico.forEach(s => {
+    if (s.totale === 0 && s.legasaur === 0) return;
+    const w = maxTot > 0 ? (s.totale / maxTot * 100) : 0;
+    const lW = s.legasaur / (maxTot || 1) * 100;
+    const cW = s.coffa / (maxTot || 1) * 100;
+    const eW = s.europa / (maxTot || 1) * 100;
+    const scW = s.supercoffa / (maxTot || 1) * 100;
+    
+    barsHtml += `<div class="storico-bar">
+      <div class="storico-team">${s.team}</div>
+      <div class="storico-visual">
+        ${s.legasaur > 0 ? `<div class="storico-segment" style="width:${lW}%;background:var(--gold)" title="Legasaur: ${s.legasaur}"></div>` : ''}
+        ${s.coffa > 0 ? `<div class="storico-segment" style="width:${cW}%;background:var(--accent)" title="Coffa: ${s.coffa}"></div>` : ''}
+        ${s.europa > 0 ? `<div class="storico-segment" style="width:${eW}%;background:#42a5f5" title="+Europa: ${s.europa}"></div>` : ''}
+        ${s.supercoffa > 0 ? `<div class="storico-segment" style="width:${scW}%;background:#ab47bc" title="Supercoffa: ${s.supercoffa}"></div>` : ''}
+      </div>
+      <div class="storico-total">${s.totale}</div>
+    </div>`;
+    
+    tableHtml += `<tr>
+      <td class="team-cell">${s.team}</td>
+      <td class="num-cell">${s.legasaur || '-'}</td><td class="num-cell">${s.coffa || '-'}</td>
+      <td class="num-cell">${s.europa || '-'}</td><td class="num-cell">${s.supercoffa || '-'}</td>
+      <td class="num-cell"><b>${s.totale}</b></td>
+    </tr>`;
+  });
+  tableHtml += '</tbody></table>';
+  
+  // Legend
+  const legend = `<div style="display:flex;gap:1rem;margin:1rem 0;flex-wrap:wrap;font-size:.82rem">
+    <span><span style="display:inline-block;width:12px;height:12px;background:var(--gold);border-radius:2px;vertical-align:middle"></span> Legasaur</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:var(--accent);border-radius:2px;vertical-align:middle"></span> Coffa</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:#42a5f5;border-radius:2px;vertical-align:middle"></span> +Europa</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:#ab47bc;border-radius:2px;vertical-align:middle"></span> Supercoffa</span>
+  </div>`;
+  
+  container.innerHTML = legend + `<div style="background:var(--bg2);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem">${barsHtml}</div>` + tableHtml;
+}
+
+// ---- ROSE ----
+let currentRoseSeason = '2025/2026';
+let currentRoseTeam = 'all';
+
+function initRose() {
+  const seasons = Object.keys(DATA.rose).reverse();
+  document.getElementById('rose-seasons').innerHTML = seasons.map(s =>
+    `<button class="season-btn${s === currentRoseSeason ? ' active' : ''}" data-season="${s}" onclick="selectRoseSeason('${s}')">${s}</button>`
+  ).join('');
+  renderRose();
+}
+
+function selectRoseSeason(s) {
+  currentRoseSeason = s;
+  currentRoseTeam = 'all';
+  document.querySelectorAll('#rose-seasons .season-btn').forEach(b => b.classList.toggle('active', b.dataset.season === s));
+  document.getElementById('rose-search').value = '';
+  renderRose();
+}
+
+function renderRose() {
+  const teams = DATA.rose[currentRoseSeason] || {};
+  const teamNames = Object.keys(teams);
+  
+  // Team tabs
+  document.getElementById('rose-teams').innerHTML = 
+    `<button class="team-tab${currentRoseTeam === 'all' ? ' active' : ''}" onclick="selectRoseTeam('all')">Tutte</button>` +
+    teamNames.map(t => `<button class="team-tab${currentRoseTeam === t ? ' active' : ''}" onclick="selectRoseTeam('${t.replace(/'/g, "\\'")  }')">${t}</button>`).join('');
+  
+  const search = (document.getElementById('rose-search').value || '').toLowerCase();
+  const container = document.getElementById('rose-content');
+  
+  let html = '';
+  teamNames.forEach(team => {
+    if (currentRoseTeam !== 'all' && currentRoseTeam !== team) return;
+    
+    let players = teams[team] || [];
+    if (search) players = players.filter(p => p.n.toLowerCase().includes(search));
+    if (players.length === 0 && search) return;
+    
+    let rows = players.map(p => `<tr>
+      <td><span class="role-badge role-${p.r}">${p.r}</span></td>
+      <td class="player-name">${p.n}</td>
+      <td style="color:var(--text2)">${p.s}</td>
+      <td class="cost">${p.c || 0}</td>
+    </tr>`).join('');
+    
+    html += `<div class="roster-card">
+      <div class="roster-header">${team}</div>
+      <table class="roster-table"><tbody>${rows}</tbody></table>
+    </div>`;
+  });
+  
+  container.innerHTML = html || '<p style="color:var(--text2)">Nessun risultato</p>';
+}
+
+function selectRoseTeam(t) {
+  currentRoseTeam = t;
+  document.querySelectorAll('#rose-teams .team-tab').forEach(b => {
+    b.classList.toggle('active', 
+      (t === 'all' && b.textContent === 'Tutte') || b.textContent === t
+    );
+  });
+  renderRose();
+}
+
+function filterRose() { renderRose(); }
+
+// ---- HOME ----
+function initHome() {
+  // Stats
+  const allTeams = new Set();
+  Object.values(DATA.classifiche).forEach(teams => teams.forEach(t => allTeams.add(t.team)));
+  const seasons = Object.keys(DATA.classifiche);
+  const totalTrophies = DATA.storico.reduce((s, t) => s + t.totale, 0);
+  
+  // Most titled
+  const topTeam = DATA.storico[0];
+  
+  document.getElementById('stats-overview').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${seasons.length}</div><div class="stat-label">Stagioni</div></div>
+    <div class="stat-card"><div class="stat-val">${allTeams.size}</div><div class="stat-label">Squadre partecipanti</div></div>
+    <div class="stat-card"><div class="stat-val">${totalTrophies}</div><div class="stat-label">Trofei assegnati</div></div>
+    <div class="stat-card"><div class="stat-val">${topTeam ? topTeam.team : '-'}</div><div class="stat-label">Squadra pi\u00f9 titolata (${topTeam ? topTeam.totale : 0})</div></div>
+  `;
+  
+  // Latest classifica
+  renderClassificaInto('home-classifica', '2025/2026');
+  
+  // Recent albo
+  const recent = DATA.albo.slice(-3).reverse();
+  document.getElementById('home-albo').innerHTML = `<div class="trophy-grid">${recent.map(a => `
+    <div class="trophy-card">
+      <div class="season">${a.stagione}</div>
+      <div class="winner">&#127942; ${a.legasaur}</div>
+      <div class="trophy-line"><span class="label">Coffa:</span><span class="val">${a.coffa && a.coffa !== '//' ? a.coffa : '-'}</span></div>
+      <div class="trophy-line"><span class="label">+Europa:</span><span class="val">${a.europa && a.europa !== '//' ? a.europa : '-'}</span></div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderClassificaInto(containerId, season) {
+  const teams = DATA.classifiche[season] || [];
+  const hasPt = teams.some(t => t.pt !== undefined);
+  const hasV = teams.some(t => t.v !== undefined);
+  const hasTotale = teams.some(t => t.totale !== undefined || t.pt_totali !== undefined);
+  
+  let cols = '<th>#</th><th>Squadra</th>';
+  if (hasPt) cols += '<th class="num-cell">Pt</th>';
+  if (hasV) cols += '<th class="num-cell">V</th><th class="num-cell">N</th><th class="num-cell">P</th>';
+  if (teams.some(t => t.gf !== undefined)) cols += '<th class="num-cell">Gf</th><th class="num-cell">Gs</th>';
+  
+  let rows = teams.map(t => {
+    const pc = t.pos <= 3 ? ' pos-' + t.pos : '';
+    let r = `<td class="pos-cell${pc}">${t.pos}</td><td class="team-cell">${t.team}</td>`;
+    if (hasPt) r += `<td class="num-cell"><b>${t.pt !== undefined ? Math.round(t.pt) : '-'}</b></td>`;
+    if (hasV) {
+      r += `<td class="num-cell">${t.v !== undefined ? Math.round(t.v) : '-'}</td>`;
+      r += `<td class="num-cell">${t.n !== undefined ? Math.round(t.n) : '-'}</td>`;
+      r += `<td class="num-cell">${t.p !== undefined ? Math.round(t.p) : '-'}</td>`;
+    }
+    if (teams.some(t => t.gf !== undefined)) {
+      r += `<td class="num-cell">${t.gf !== undefined ? Math.round(t.gf) : '-'}</td>`;
+      r += `<td class="num-cell">${t.gs !== undefined ? Math.round(t.gs) : '-'}</td>`;
+    }
+    return `<tr>${r}</tr>`;
+  }).join('');
+  
+  document.getElementById(containerId).innerHTML = `<table><thead><tr>${cols}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ---- INIT ----
+initHome();
+initClassifiche();
+initAlbo();
+initStorico();
+initRose();
+</script>
+</body>
+</html>
